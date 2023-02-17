@@ -37,3 +37,6 @@ def turn180():
 
     screen.update()
     sleep(3)
+
+
+turn180()
