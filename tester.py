@@ -9,38 +9,36 @@ from ev3dev2.sensor.lego import GyroSensor
 from ev3dev2.display import Display
 import ev3dev2.fonts as fonts
 from time import sleep
+import math
 
 # TODO
+# initialise motors and sensors
 tank_drive = MoveTank(OUTPUT_A, OUTPUT_B)
 
 gyro = GyroSensor(INPUT_1)
 
 screen = Display()
 
+
 # this fucntion allows the user to enter in a degree value for the robot to rotate to
-
-
-def turn180(deg):
+def turn(deg):
     gyro.calibrate()
     gyro.reset()
     #tank_drive.on_for_rotations(SpeedPercent(50), SpeedPercent(-50), 1.889)
+    while abs(gyro.angle - deg) > 2:
+        turn_polarity = math.copysign(1, gyro.angle - deg)
 
-    while gyro.angle > deg:
-        tank_drive.on(SpeedPercent(-50), SpeedPercent(50))
-        screen.clear()
-        screen.draw.text((10, 10), str(gyro.angle), font=fonts.load('luBS14'))
-        screen.update()
+        tank_drive.on(SpeedPercent(50*turn_polarity),
+                      SpeedPercent(50*-turn_polarity))
+        print("Angle left:", (gyro.angle - deg))
         # make motors turn off
-        sleep(0.1)
+
     tank_drive.off()
 
     screen.clear()
     screen.draw.text((10, 10), str(gyro.angle), font=fonts.load('luBS14'))
     screen.update()
     sleep(3)
-
-
-turn180()
 
 
 # method for task 2 first value is the length in cm the second is the number of laps.
@@ -54,7 +52,8 @@ def task2(l, n):
     for i in range(n):
         tank_drive.on_for_rotations(SpeedPercent(
             50), SpeedPercent(50), numRotations)
-        turn180()
+        turn()
 
 
-task2(130, 3)
+sleep(2)
+turn(180)
