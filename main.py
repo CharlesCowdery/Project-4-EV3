@@ -24,6 +24,8 @@ right_motor = LargeMotor(right_motor_port)
 gyro = GyroSensor(INPUT_1)
 gyro.calibrate()
 
+left_balance = 0.39
+
 def driveDistance(dist,margin): #input travel distance in cm and margin in cm
     gyro.calibrate()
     starting_rotation = (left_motor.position/360,right_motor.position/360) # gets wheel rotation in degrees, then converts to rotations
@@ -64,7 +66,7 @@ def driveDistance(dist,margin): #input travel distance in cm and margin in cm
             right_done = True
             
         if( not left_rotation_remaning<margin_rotation):
-            speed_percent = max(min(100,100-delta_angle*corrective_scalar),-100)
+            speed_percent = max(min(100,100-delta_angle*corrective_scalar),-100)*left_balance
             speed = SpeedPercent(speed_percent)
             left_motor.on(speed,False,False)
             print("left motor speed: {0:.2f}".format(speed_percent))
