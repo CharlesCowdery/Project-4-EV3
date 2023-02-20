@@ -14,7 +14,7 @@ import math
 left_motor_port = OUTPUT_C
 right_motor_port = OUTPUT_B
 
-circumference_scalar = 0.8
+circumference_scalar = 0.64
 
 wheel_diameter = 3.3 #cm
 wheel_circumference = 2*math.pi*wheel_diameter*circumference_scalar
@@ -24,19 +24,23 @@ right_motor = LargeMotor(right_motor_port)
 gyro = GyroSensor(INPUT_1)
 gyro.calibrate()
 
-left_balance = 0.36
 
-def driveDistance(dist,margin): #input travel distance in cm and margin in cm
-    gyro.calibrate()
+def driveDistance(dist,margin,angle): #input travel distance in cm and margin in cm
     starting_rotation = (left_motor.position/360,right_motor.position/360) # gets wheel rotation in degrees, then converts to rotations
     dist_rotation = dist/wheel_circumference
     margin_rotation = margin/wheel_circumference
     left_done = False
     right_done = False
 
-    corrective_scalar = 2
+    drive_polarity = math.copysign(1,dist)
 
-    starting_angle = gyro.angle
+    speed_base = 50
+    left_modifier = 0
+    right_modifier = 0
+
+    corrective_scalar = 2.3
+
+    starting_angle = angle
 
     while(not (left_done and right_done)):
         
@@ -45,39 +49,55 @@ def driveDistance(dist,margin): #input travel distance in cm and margin in cm
         right_rotation_calibrated = right_motor.position/360-starting_rotation[1] 
         right_rotation_remaning = dist_rotation-right_rotation_calibrated
 
-        
+
         angle = gyro.angle
         delta_angle = angle-starting_angle
 
-        print("margin rotation = {0:.2f}, goal rotation = {1:.2f}".format(margin_rotation,dist_rotation))
-        print("left rotation = {0:.2f}, right rotation = {1:.2f}".format(left_rotation_calibrated,right_rotation_calibrated))
-        print("remaining left = {0:.2f}, remaining right = {0:.2f}".format(left_rotation_remaning,right_rotation_remaning))
-        print()
-        print("current angle: {0:.2f}, target angle: {1:.2f}".format(angle,starting_angle))
+        #print("margin rotation = {0:.2f}, goal rotation = {1:.2f}".format(margin_rotation,dist_rotation))
+        #print("left rotation = {0:.2f}, right rotation = {1:.2f}".format(left_rotation_calibrated,right_rotation_calibrated))
+        #print("remaining left = {0:.2f}, remaining right = {0:.2f}".format(left_rotation_remaning,right_rotation_remaning))
+        #print()
+        #print("current angle: {0:.2f}, target angle: {1:.2f}".format(angle,starting_angle))
 
-        if( not right_rotation_remaning<margin_rotation):
-            speed_percent = max(min(100,100+delta_angle*corrective_scalar),-100) # when it tilts, it will slow a respective motor down to correct
+        if( not abs(right_rotation_remaning)<margin_rotation):
+            speed_percent = max(min(100,
+                                    (speed_base+right_modifier)*drive_polarity+delta_angle*corrective_scalar
+                                    ),-100) # when it tilts, it will slow a respective motor down to correct
             #the max and min is to make sure the input is bounded
             speed = SpeedPercent(speed_percent)
             right_motor.on(speed,False,False)
-            print("right motor speed: {0:.2f}".format(speed_percent))
+            #print("right motor speed: {0:.2f}".format(speed_percent))
         else:
             right_motor.on(SpeedPercent(0),True) #brakes
             right_done = True
             
-        if( not left_rotation_remaning<margin_rotation):
-            speed_percent = max(min(100,100-delta_angle*corrective_scalar),-100)*left_balance
+        if( not abs(left_rotation_remaning)<margin_rotation):
+            speed_percent = max(min(100,
+                                    (speed_base+left_modifier)*drive_polarity-delta_angle*corrective_scalar
+                                    ),-100)
             speed = SpeedPercent(speed_percent)
             left_motor.on(speed,False,False)
-            print("left motor speed: {0:.2f}".format(speed_percent))
+            #print("left motor speed: {0:.2f}".format(speed_percent))
 
         else:
             left_motor.on(SpeedPercent(0),True) #brakes
             left_done = True
-        print(str(left_done) + " " + str(right_done))
-        print()
+        #print(str(left_done) + " " + str(right_done))
+        #print()
+
+def Task1():
+    driveDistance(180,1,0)
+    sleep(0.5)
+    driveDistance(-180,1,0)
+    sleep(1)
+
+def Task2():
+    laps = 4
+
 
 def main():
-    driveDistance(100000,1)
+    sleep(1)
+    gyro.calibrate()
+    Task1()
 
 main()
