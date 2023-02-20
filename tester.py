@@ -25,18 +25,17 @@ def turn(deg):
     gyro.calibrate()
     gyro.reset()
     #tank_drive.on_for_rotations(SpeedPercent(50), SpeedPercent(-50), 1.889)
+    turn_polarity = math.copysign(1, gyro.angle - deg)
+    tank_drive.on(SpeedPercent(30*turn_polarity),
+                  SpeedPercent(30*-turn_polarity))
     while abs(gyro.angle - deg) > 2:
-        turn_polarity = math.copysign(1, gyro.angle - deg)
-
-        tank_drive.on(SpeedPercent(50*turn_polarity),
-                      SpeedPercent(50*-turn_polarity))
-        print("Angle left:", (gyro.angle - deg))
-        # make motors turn off
+        1+1
 
     tank_drive.off()
 
     screen.clear()
     screen.draw.text((10, 10), str(gyro.angle), font=fonts.load('luBS14'))
+    print("final angle = " + str(gyro.angle))
     screen.update()
     sleep(3)
 
@@ -52,8 +51,4 @@ def task2(l, n):
     for i in range(n):
         tank_drive.on_for_rotations(SpeedPercent(
             50), SpeedPercent(50), numRotations)
-        turn()
-
-
-sleep(2)
-turn(180)
+        turn(180)
