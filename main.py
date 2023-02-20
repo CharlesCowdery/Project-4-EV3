@@ -24,7 +24,7 @@ right_motor = LargeMotor(right_motor_port)
 gyro = GyroSensor(INPUT_1)
 gyro.calibrate()
 
-left_balance = 0.39
+left_balance = 0.36
 
 def driveDistance(dist,margin): #input travel distance in cm and margin in cm
     gyro.calibrate()
