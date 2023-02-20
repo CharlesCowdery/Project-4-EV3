@@ -21,6 +21,7 @@ wheel_circumference = 2*math.pi*wheel_diameter*circumference_scalar
 
 left_motor = LargeMotor(left_motor_port)
 right_motor = LargeMotor(right_motor_port)
+tank_drive = MoveTank(OUTPUT_A, OUTPUT_B)
 gyro = GyroSensor(INPUT_1)
 gyro.calibrate()
 
@@ -84,6 +85,7 @@ def driveDistance(dist,margin,angle): #input travel distance in cm and margin in
             left_done = True
         #print(str(left_done) + " " + str(right_done))
         #print()
+
 
 def Task1():
     driveDistance(180,1,0)
