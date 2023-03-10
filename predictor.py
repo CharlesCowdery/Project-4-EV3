@@ -12,21 +12,21 @@ task_2 = {
 
 def predict_1(distance):
     if(distance < 0):
-        return (-999,-999)
+        return (-999,-999) #bound checking
     if(distance == 0):
-        return (0,0)
+        return (0,0)       #ensuring it doesnt give some weird result
     if(distance <= 12):
-        scalar = distance/12
+        scalar = distance/12   #since its between 0-12 it can just divide by 12 to interpolate
         return(task_1["error_x"][0]*scalar,task_1["error_y"][0]*scalar)
     if(distance <= 36):
-        diff = 36-distance
-        scalar_1 = diff/24
-        scalar_2 = 1-scalar_1
-        x1 = task_1["error_x"][0]*scalar_1
+        diff = 36-distance     #gets the delta between the selected value and the top bound
+        scalar_1 = diff/24     #gets percent to the top bound
+        scalar_2 = 1-scalar_1  #gets the percent to the bottom bound
+        x1 = task_1["error_x"][0]*scalar_1 #multiplies using the percent of each bound
         y1 = task_1["error_y"][0]*scalar_1
         x2 = task_1["error_x"][1]*scalar_2
         y2 = task_1["error_y"][1]*scalar_2
-        return(x1+x2,y1+y2)
+        return(x1+x2,y1+y2)                #adds together the scaled values, for a final interpolated value
     if(distance <= 60):
         diff = 60-distance
         scalar_1 = diff/24
@@ -45,8 +45,12 @@ def predict_1(distance):
         x2 = task_1["error_x"][3]*scalar_2
         y2 = task_1["error_y"][3]*scalar_2
         return(x1+x2,y1+y2)
-    scalar = distance/84
-    return(task_1["error_x"][3]*scalar,task_1["error_y"][3]*scalar)
+    scalar = distance/84 #in the case it selects a greater distance, it does this to get how many multiples of the highest bound youve selected
+    return(task_1["error_x"][3]*scalar,task_1["error_y"][3]*scalar) #and then multiplies the error for the highest bound by that
+"""
+
+#this code is ancillary, and pertains to an older version of this file
+#I have this commented for posterity
 
 def predict_2(distance):
     if(distance < 0):
@@ -87,7 +91,7 @@ def predict_2(distance):
     return(task_2["error_x"][3]*scalar,task_2["error_y"][3]*scalar)
 
 
-"""
+
 #predicts for task 1 and task 2 based of an entered distance
 while(True):
     value = input("Enter distance to predict for (in inches), or exit to leave: ")
@@ -107,10 +111,11 @@ while(True):
 #predicts using task 1 data for an x y movement assuming perfect turning
 
 while(True):
-    x = float(input("Enter x in inches to predict for: "))
-    y = float(input("Enter y in inches to predict for: "))
-    values_x = predict_1(x)
-    values_y = predict_1(y)
-    final = (values_x[1]+values_y[0],values_x[0]+values_y[1])
+    x = float(input("Enter x in inches to predict for (no negatives): "))
+    y = float(input("Enter y in inches to predict for (no negatives): "))  #I refuse to do error checking when its only intended for my team to use
+    values_x = predict_1(x)   #since predict_1 gets the error for driving a single straight distance
+    values_y = predict_1(y)   #We can just use it twice assuming the turn function on the robot is perfect (It usually is)
+    final = (values_x[1]+values_y[0],-values_x[0]+values_y[1]) #since x is facing to the right, positive x error when pointing on the x axis from
+                                                            #the robots perspective translates to negative y error
     print("Your predicted error in the x direction is {0:.2f} inches\nYour predicted error in the y direction is {1:.2f} inches".format(final[0],final[1]))
     print()
