@@ -17,7 +17,7 @@ left_motor_port = OUTPUT_C
 right_motor_port = OUTPUT_B
 
 circumference_scalar = 0.64*1.66666666
-distance_scalar = 29.240853516
+distance_scalar = 27.8
 
 cross_section_length = 19.3 #cm
 
@@ -68,7 +68,7 @@ def driveDistance(dist,margin,angle): #input travel distance in cm and margin in
 
     speed_base = 20
     left_modifier = 0
-    right_modifier = 0
+    right_modifier = 0.5
 
     corrective_scalar = 1
 
@@ -104,8 +104,8 @@ def driveDistance(dist,margin,angle): #input travel distance in cm and margin in
 
         if( not abs(right_rotation_remaning)<margin_rotation):
             speed_percent = max(min(100,
-                                    (speed_base+right_modifier)*drive_polarity+delta_angle*corrective_scalar
-                                    ),-100) # when it tilts, it will slow a respective motor down to correct
+                                    (speed_base*right_rotation_remaning/dist_rotation+right_modifier)*drive_polarity+delta_angle*corrective_scalar
+                                    ),10) # when it tilts, it will slow a respective motor down to correct
             #the max and min is to make sure the input is bounded
             right_speed = SpeedPercent(speed_percent)
             #print("right motor speed: {0:.2f}".format(speed_percent))
@@ -116,8 +116,8 @@ def driveDistance(dist,margin,angle): #input travel distance in cm and margin in
             
         if( not abs(left_rotation_remaning)<margin_rotation):
             speed_percent = max(min(100,
-                                    (speed_base+left_modifier)*drive_polarity-delta_angle*corrective_scalar
-                                    ),-100)
+                                    (speed_base*left_rotation_remaning/dist_rotation+left_modifier)*drive_polarity-delta_angle*corrective_scalar
+                                    ),10)
             left_speed = SpeedPercent(speed_percent)
             #print("left motor speed: {0:.2f}".format(speed_percent))
 
@@ -217,18 +217,70 @@ def Task2():
 
 def goToXY(x,y):
     starting_angle = 0
-    driveDistance(y,0.5,starting_angle)
+    driveDistance(y,0.3,starting_angle)
     turn(90)
-    driveDistance(x,0.5,starting_angle+90)
+    driveDistance(x,0.3,starting_angle+90)
+    turn(starting_angle+90)
+
+def testing_set1():
+    global robot_x, robot_y
+    print("You have selected test suite 1.")
+    while(True):
+        distance = float(input("enter distance to travel in inches: "))*2.54 #convert to cm
+        test_count = 0
+        while(True):
+            user_input = input("enter cancel to leave, otherwise hit enter to continue: ")
+            test_count += 1
+
+            if(user_input == "cancel"):
+                break
+            print("Test "+str(test_count)+":")
+
+            gyro.reset()
+            robot_x = 0
+            robot_y = 0
+
+            driveDistance(distance,0.3,0)
+            turn(0)
+        print("Ok! returning to distance select.")
+
+def testing_set2():
+    global robot_x, robot_y
+    print("You have selected test suite 2.")
+    while(True):
+        distance_x = float(input("enter distance of second leg in inches: "))*2.54 #convert to cm
+        distance_y = 12*2.54
+        test_count = 0
+        while(True):
+            user_input = input("enter stop to leave, otherwise hit enter to continue: ")
+            test_count += 1
+            
+            if(user_input == "cancel"):
+                break
+
+            print("Test "+str(test_count)+":")
+
+
+            gyro.reset()
+            robot_x = 0
+            robot_y = 0
+            goToXY(distance_x,distance_y)
+        print("Ok! returning to distance select.")
+            
+
+
+
 
 def main():
-    gyro.calibrate()
+    global distance_scalar 
     gyro.reset()
     gyro.mode = gyro.MODE_GYRO_ANG
     #driveDistance(30,1,0)
     #calibrate()
-    goToXY(float(input("input x: ")),float(input("input y: ")))
+    testing_set1()
 
+distance_scalar = 28.2 #if it overshoots raise this value. vice versa
 
-
+sleep(1)
+gyro.calibrate()
 main()
