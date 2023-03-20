@@ -11,73 +11,41 @@ import ev3dev2.fonts as fonts
 from time import sleep
 import time
 import math
-import random
+from datetime import datetime
+import constants as con
+import navigation as nav
+import devices
 
-left_motor_port = OUTPUT_C
-right_motor_port = OUTPUT_B
 
-circumference_scalar = 0.64*1.66666666
-distance_scalar = 29.240853516
-
-cross_section_length = 19.3 #cm
-
-wheel_diameter = 3.3 #cm
-wheel_circumference = 2*math.pi*wheel_diameter*circumference_scalar
-
-left_motor = LargeMotor(left_motor_port)
-right_motor = LargeMotor(right_motor_port)
-tank_drive = MoveTank(left_motor_port, right_motor_port)
-gyro = GyroSensor(INPUT_1)
-gyro.calibrate()
+left_motor = devices.left_motor
+right_motor = devices.right_motor
+tank_drive = devices.tank_drive
+gyro = devices.gyro
 
 robot_x = 0
 robot_y = 0
 
-def WIP_motor(speed):
-    """
-    motor.speed_sp = speed
-    motor.run_forever() #this might not even be neccessary.
-    """
-    
+
+"""#note this is the fastest way to change motor speed
+motor.speed_sp = speed
+motor.run_forever() 
+"""
 
 
-def calibrate():
-    global distance_scalar
-    starting_angle = gyro.angle
-    starting_left = left_motor.position/360
-    starting_right = right_motor.position/360
-    tank_drive.on(10,-10)
-    while(gyro.angle<starting_angle+720-2):
-        1+1
-    tank_drive.off(None,True)
-    sleep(1)
-    delta_left = left_motor.position/360-starting_left
-    delta_right = right_motor.position/360-starting_right
-    print(delta_left)
-    print(delta_right)
-    print(gyro.angle)
-    length = gyro.angle/360*math.pi*cross_section_length
-    average_rotation = (abs(delta_left)+abs(delta_right))/2
-    distance_scalar = length/average_rotation
-    print(distance_scalar)
-    
-
-def drive(dist,margin,angle): #input travel distance in cm and margin in cm
-    global robot_x, robot_y, distance_scalar
+def drive(dist,angle): #input travel distance in cm and margin in cm
+    global robot_x, robot_y
 
     left_starting_rotation = left_motor.rotations
     right_starting_rotation = right_motor.rotations
 
-    dist_rotation = dist/distance_scalar
-    margin_rotation = margin/distance_scalar
+    dist_rotation = dist/con.distance_scalar
+    margin_rotation = (0)/con.distance_scalar
 
-    left_done = False
-    right_done = False
-
-    drive_polarity = math.copysign(1,dist)
-
-    speed_base = 20
+    speed_base = 0.2
     
+    left_max_speed  = speed_base*left_motor.max_speed*0.75 #handicap
+    right_max_speed = speed_base*right_motor.max_speed
+
     angle_array = []
     left_rotation_array = []
     right_rotation_array = []
@@ -87,11 +55,53 @@ def drive(dist,margin,angle): #input travel distance in cm and margin in cm
         left_rotation_array.append(-9999)
         right_rotation_array.append(-9999)
 
-    position = 0
+    index = 0
+
+    current_angle = gyro.value(0)
+
+    left_motor.speed_sp = left_max_speed
+    right_motor.speed_sp = right_max_speed
+    left_motor.command = 'run-forever'
+    right_motor.command = 'run-forever'
+
+    target_rotations = dist_rotation
+
+    start_time = time.perf_counter()
+
+    last_angle = current_angle
 
     while(True):
-        1+1
-        #Todo
+        current_angle = gyro.value(0)
+        l_rotations = left_motor.rotations
+        r_rotations = right_motor.rotations
+
+        angle_array[index] = current_angle
+        left_rotation_array[index] = l_rotations
+        right_rotation_array[index] = r_rotations
+        index+=1
+
+        if(l_rotations >= target_rotations or r_rotations >=target_rotations):
+            left_motor.off(True)
+            right_motor.off(True)
+            end_time = time.perf_counter()
+            print("polling rate: {0:.1f}Hz".format(index/(end_time-start_time)))
+            break
+
+        if(last_angle != current_angle): #optimization to ensure motor angle is changed as rarely as possible
+            delta_angle = (angle-current_angle)*10
+            left_motor.speed_sp = left_max_speed+delta_angle
+            right_motor.speed_sp = right_max_speed-delta_angle
+            left_motor.command = 'run-forever'
+            right_motor.command = 'run-forever'
+            last_angle = current_angle
+
+    nav.export_movement("latest.json",angle_array,left_rotation_array,right_rotation_array,index,dist,angle,start_time,end_time)
+    #reconstruct(angle_array,left_rotation_array,right_rotation_array,dist,angle)
+
+    
+        
+
+
 
 def turn(deg):
     #tank_drive.on_for_rotations(SpeedPercent(50), SpeedPercent(-50), 1.889)
@@ -172,13 +182,7 @@ def goToXY(x,y):
     driveDistance(x,0.5,starting_angle+90)
 
 def main():
-    print("Calibrating!")
-    gyro.calibrate()
-    gyro.reset()
-    print("Done!")
-    gyro.mode = gyro.MODE_GYRO_ANG
-    #driveDistance(30,1,0)
-    #calibrate()
+    nav.initialize(devices)    
 
 
 
