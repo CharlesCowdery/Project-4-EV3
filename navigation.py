@@ -1,5 +1,5 @@
 from time import sleep
-import datetime
+from datetime import datetime
 import math
 import constants as con
 import json
@@ -9,7 +9,10 @@ import os
 #This file contains functions pertaining to sensor calibration
 #navigation estimation, and log import and exporting
 
-gyro,left_motor,right_motor,move_tank = 0
+gyro = 0
+left_motor = 0
+right_motor = 0
+move_tank = 0
 
 def initialize(devices):  #We get take a devices instance so the modules can share a device set
     global gyro,left_motor,right_motor,move_tank
@@ -115,13 +118,13 @@ def model_turn_circle(l,r): #this wont error out when given a negative number, b
 
 
 
-def reconstruct(angles,l_rotations,r_rotations,distance,target_angle,file_name=False):
-    print("reconstructing route:")
+def reconstruct(angles,l_rotations,r_rotations,verbose=False,file_name="NEWREC.log"):
+    if(verbose):print("reconstructing route:")
     deltas_l = []
     deltas_r = []
     i = 1
 
-    print(" -> Getting rotation deltas...")
+    if(verbose):print(" -> Getting rotation deltas...")
     while(angles[i]!=-9999):
         deltas_l.append(l_rotations[i]-l_rotations[i-1])
         deltas_r.append(r_rotations[i]-r_rotations[i-1])
@@ -130,14 +133,9 @@ def reconstruct(angles,l_rotations,r_rotations,distance,target_angle,file_name=F
     x = 0
     y = 0
 
-    angle = -angles[0]
+    angle = -angles[0]        
 
-    now = datetime.now()
-
-    metadata = "'distance': {0:.2f}, 'target_angle': {1:.2f}, 'scalar': {2:.3f}, 'time-signature': {3}\n".format(distance,target_angle,con.distance_scalar,now)
-    file_string = metadata
-
-    print(" -> calculating position changes...")
+    if(verbose):print(" -> calculating position changes...")
     for i in range(len(deltas_l)):
         prediction = model_turn_circle(deltas_l[i],deltas_r[i])
         angle += prediction[2]
@@ -145,24 +143,26 @@ def reconstruct(angles,l_rotations,r_rotations,distance,target_angle,file_name=F
         x+=prediction[3]*math.cos(math.radians(angle+90))
         y+=prediction[3]*math.sin(math.radians(angle+90))
 
-        file_string+="'delta_left':{0:.6f}, 'delta_right':{1:.6f}, 'delta_angle':{2:.6f} 'gyro':{3:5.4f}, 'accumulated_angle':{4:.6f}, 'predicted_x':{5:.6f}, 'predicted_y':{6:.6f}\n".format(
-            deltas_l[i],deltas_r[i],prediction[2],-angles[i],angle,x,y)
+        if(verbose):
+            file_string+="'delta_left':{0:9.6f}, 'delta_right':{1:9.6f}, 'delta_angle':{2:7.2f} 'gyro':{3:5.0f}, 'accumulated_angle':{4:7.2f}, 'predict_x':{5:5.4f}, 'predict_y':{6:5.1f}\n".format(
+                    deltas_l[i],deltas_r[i],prediction[2],-angles[i],angle,x,y)
         #avg_rotation = (deltas_l[i]+deltas_r[i])/2
         #x+=avg_rotation*math.cos((angle+90)*math.pi/180)*distance_scalar
         #y+=avg_rotation*math.sin((angle+90)*math.pi/180)*distance_scalar
     
-    print(" -> route reconstruction done! Final change: X = {0:.3f} ; Y = {1:.3f}".format(x,y))
-    print(" -> writing log file...")
-    if(not file_name):
-        file_name = "reconstruction-{0:.0f}-{1}.log".format(distance,now.strftime("%d-%m-%Y_%H-%M-%S"))
-    log_file = open(os.path.join("reconstructions",file_name),"w")
-    log_file.write(file_string)
-    log_file.close()
-    print(" -> file written and saved!")
-    print()
+    if(verbose):
+        print(" -> route reconstruction done! Final change: X = {0:.3f} ; Y = {1:.3f}".format(x,y))
+        print(" -> writing log file...")
+        log_file = open(os.path.join("reconstructions",file_name),"w")
+        log_file.write(file_string)
+        log_file.close()
+        print(" -> file written and saved!")
+        print()
+    
+    return x,y
 
-def reconstruct_from_file(file_name,kernel = False):
-    file = open(file_name,"r")
+def load_nav_data(directory,file_name,endians = False):
+    file = open(os.path.join(directory,file_name),"r")
     nav_obj = json.load(file)
 
     metadata = nav_obj["metadata"]
@@ -178,28 +178,61 @@ def reconstruct_from_file(file_name,kernel = False):
         left_rotations.append(data_block["left"])
         right_rotations.append(data_block["right"])
     
-    if(kernel!=False):
-        if(len(kernel)%2 == 1):
-            kernel_size = len(kernel)
-            half_kernel_size = math.floor(kernel_size/2)
-            start_index = half_kernel_size
-            end_index = len(left_rotations)-half_kernel_size
+    if endians:
+        angles.append(-9999)
+        left_rotations.append(-9999)
+        right_rotations.append(-9999)
+    
+    return (metadata,left_rotations,right_rotations,angles)
 
-            left_accumulator = []
-            right_accumulator = []
+def apply_kernel(data,kernel,pad = True):
+    if(len(kernel)%2 == 1):
+        kernel_size = len(kernel)
+        half_kernel_size = math.floor(kernel_size/2)
+        start_index = half_kernel_size
+        end_index = len(data)-half_kernel_size
 
-            for i in range(start_index,end_index):
-                for k in range(start_index+i,start_index+i+kernel_size):
-                    left_accumulator[k]+=left_rotations*kernel[k]
-                    right_accumulator[k]+=right_rotations*kernel[k]
-        
-            left_rotations = left_accumulator
-            right_rotations = right_accumulator
+        if(pad == True):
+            my_data = data.copy()
+            for i in range(half_kernel_size): #add padding
+                my_data.insert(0,0)
+                my_data.append(0)
+            start_index = 0
+            end_index = len(data)
         else:
-            raise Exception("A kernel of size {} is invalid!".format(len(kernel)))
+            my_data = data
+
+        length = end_index-start_index
+        accumulator = [0]*(length)
+
+        for i in range(length):
+            for k in range(kernel_size):
+                index = (start_index+i+k)-half_kernel_size
+                accumulator[i]+=my_data[index]*kernel[k]
+        
+        return accumulator
+    else:
+        raise Exception("A kernel of size {} is invalid!".format(len(kernel)))
+
+
+def reconstruct_from_file(directory,file_name,kernel = False):
+    
+    nav_data = load_nav_data(directory,file_name,False)
+    metadata = nav_data[0]
+    left_rotations = nav_data[1]
+    right_rotations = nav_data[2]
+    angles = nav_data[3]
+
+    if(kernel!=False):                      
+        left_rotations = apply_kernel(left_rotations,kernel)
+        right_rotations = apply_kernel(right_rotations,kernel)
+
+    angles.append(-9999)
+    left_rotations.append(-9999)
+    right_rotations.append(-9999)
 
     new_file_name = "REC-"+file_name.split(".")[0]+".log"
-    reconstruct(angles,left_rotations,right_rotations,metadata["distance"],metadata["target-angle"],new_file_name)
+    reconstruct(angles, left_rotations, right_rotations, False, new_file_name)
 
 
 def export_movement(name,angles,left_rotations,right_rotations,size,dist,target_angle,start_time,end_time):
@@ -244,3 +277,7 @@ def export_movement(name,angles,left_rotations,right_rotations,size,dist,target_
     file.close()
 
     print(" -> Movement export done!")
+
+if __name__ == "__main__":
+    #[-1,3,1]/4.88 works really well for some fucking reason
+    reconstruct_from_file("nav-logs","cm-60-woodpanel-maxbattery.json",[-1,3,1])
