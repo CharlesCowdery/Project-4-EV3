@@ -2,10 +2,16 @@ from time import sleep
 import datetime
 import math
 import constants as con
+import json
+import os
+
+
+#This file contains functions pertaining to sensor calibration
+#navigation estimation, and log import and exporting
 
 gyro,left_motor,right_motor,move_tank = 0
 
-def initialize(devices):
+def initialize(devices):  #We get take a devices instance so the modules can share a device set
     global gyro,left_motor,right_motor,move_tank
     gyro = devices.gyro
     left_motor = devices.left_motor
@@ -22,8 +28,7 @@ def initialize(devices):
 
 
 
-def calibrate(left_motor,right_motor,gyro):
-    global distance_scalar
+def calibrate():
     starting_angle = gyro.angle
     starting_left = left_motor.position/360
     starting_right = right_motor.position/360
@@ -41,8 +46,7 @@ def calibrate(left_motor,right_motor,gyro):
     print(gyro.angle)
     length = gyro.angle/360*math.pi*con.cross_section_length
     average_rotation = (abs(delta_left)+abs(delta_right))/2
-    distance_scalar = length/average_rotation
-    print(distance_scalar)
+    print(length/average_rotation)
     
 def angle_from_dist_square(l,r): #this predicts angle based off of movement of the wheels.
     short = l
@@ -76,11 +80,11 @@ def angle_from_dist_square(l,r): #this predicts angle based off of movement of t
     
 
 def model_turn_circle(l,r): #this wont error out when given a negative number, but the behavior is unaccounted for, and should be avoided
-    inside = l*distance_scalar
-    outside = r*distance_scalar
+    inside = l*con.distance_scalar
+    outside = r*con.distance_scalar
     if(l == r):
         return [0,0,0,l]
-    if(l == 0 or r == 0): #todo, actually make this not awful
+    if(l == 0 or r == 0): #todo, make this not awful
         return [0,0,0,0]
     
     internal_radius = inside*con.cross_section_length/(outside-inside)
@@ -111,7 +115,7 @@ def model_turn_circle(l,r): #this wont error out when given a negative number, b
 
 
 
-def reconstruct(angles,l_rotations,r_rotations,distance,target_angle):
+def reconstruct(angles,l_rotations,r_rotations,distance,target_angle,file_name=False):
     print("reconstructing route:")
     deltas_l = []
     deltas_r = []
@@ -130,7 +134,7 @@ def reconstruct(angles,l_rotations,r_rotations,distance,target_angle):
 
     now = datetime.now()
 
-    metadata = "'distance': {0:.2f}, 'target_angle': {1:.2f}, 'scalar': {2:.3f}, 'time-signature': {3}\n".format(distance,target_angle,distance_scalar,now)
+    metadata = "'distance': {0:.2f}, 'target_angle': {1:.2f}, 'scalar': {2:.3f}, 'time-signature': {3}\n".format(distance,target_angle,con.distance_scalar,now)
     file_string = metadata
 
     print(" -> calculating position changes...")
@@ -141,7 +145,7 @@ def reconstruct(angles,l_rotations,r_rotations,distance,target_angle):
         x+=prediction[3]*math.cos(math.radians(angle+90))
         y+=prediction[3]*math.sin(math.radians(angle+90))
 
-        file_string+="'delta_left':{0:.6f}, 'delta_right':{1:.6f}, 'delta_angle':{2:.6f} 'gyro':{3}, 'accumulated_angle':{4:.6f}, 'predicted_x':{5:.6f}, 'predicted_y':{6:.6f}\n".format(
+        file_string+="'delta_left':{0:.6f}, 'delta_right':{1:.6f}, 'delta_angle':{2:.6f} 'gyro':{3:5.4f}, 'accumulated_angle':{4:.6f}, 'predicted_x':{5:.6f}, 'predicted_y':{6:.6f}\n".format(
             deltas_l[i],deltas_r[i],prediction[2],-angles[i],angle,x,y)
         #avg_rotation = (deltas_l[i]+deltas_r[i])/2
         #x+=avg_rotation*math.cos((angle+90)*math.pi/180)*distance_scalar
@@ -149,12 +153,54 @@ def reconstruct(angles,l_rotations,r_rotations,distance,target_angle):
     
     print(" -> route reconstruction done! Final change: X = {0:.3f} ; Y = {1:.3f}".format(x,y))
     print(" -> writing log file...")
-    file_name = "pathdata-{0:.0f}-{1}.log".format(distance,now.strftime("%d-%m-%Y_%H-%M-%S"))
-    log_file = open(file_name,"w")
+    if(not file_name):
+        file_name = "reconstruction-{0:.0f}-{1}.log".format(distance,now.strftime("%d-%m-%Y_%H-%M-%S"))
+    log_file = open(os.path.join("reconstructions",file_name),"w")
     log_file.write(file_string)
     log_file.close()
     print(" -> file written and saved!")
     print()
+
+def reconstruct_from_file(file_name,kernel = False):
+    file = open(file_name,"r")
+    nav_obj = json.load(file)
+
+    metadata = nav_obj["metadata"]
+    path_data = nav_obj["path-data"]
+
+    angles = []
+    left_rotations = []
+    right_rotations = []
+
+    for i in range(len(path_data)):
+        data_block = path_data[i]
+        angles.append(data_block["angle"])
+        left_rotations.append(data_block["left"])
+        right_rotations.append(data_block["right"])
+    
+    if(kernel!=False):
+        if(len(kernel)%2 == 1):
+            kernel_size = len(kernel)
+            half_kernel_size = math.floor(kernel_size/2)
+            start_index = half_kernel_size
+            end_index = len(left_rotations)-half_kernel_size
+
+            left_accumulator = []
+            right_accumulator = []
+
+            for i in range(start_index,end_index):
+                for k in range(start_index+i,start_index+i+kernel_size):
+                    left_accumulator[k]+=left_rotations*kernel[k]
+                    right_accumulator[k]+=right_rotations*kernel[k]
+        
+            left_rotations = left_accumulator
+            right_rotations = right_accumulator
+        else:
+            raise Exception("A kernel of size {} is invalid!".format(len(kernel)))
+
+    new_file_name = "REC-"+file_name.split(".")[0]+".log"
+    reconstruct(angles,left_rotations,right_rotations,metadata["distance"],metadata["target-angle"],new_file_name)
+
 
 def export_movement(name,angles,left_rotations,right_rotations,size,dist,target_angle,start_time,end_time):
     print("Beginning movement export.")
@@ -164,7 +210,7 @@ def export_movement(name,angles,left_rotations,right_rotations,size,dist,target_
     file_string = "{"
     metadata = '\t"metadata": {'+"""
     \t\t"distance": {0:.2f},
-    \t\t"target_angle": {1:.2f},
+    \t\t"target-angle": {1:.2f},
     \t\t"scalar": {2:.3f},
     \t\t"file-time": "{3}",
     \t\t"start-time": {4},
