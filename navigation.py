@@ -1,9 +1,10 @@
 from time import sleep
 from datetime import datetime
 import math
-import constants as con
 import json
 import os
+import constants as con
+from descent import apply_kernel
 
 
 #This file contains functions pertaining to sensor calibration
@@ -87,11 +88,15 @@ def model_turn_circle(l,r): #this wont error out when given a negative number, b
     outside = r*con.distance_scalar
     if(l == r):
         return [0,0,0,l]
-    if(l == 0 or r == 0): #todo, make this not awful
+    if(l == 0 or r == 0): #todo, make this actually useful. Not super high priority though, since input kernels means zeros are rare
         return [0,0,0,0]
     
+
+    #this assumes the robots tires essentially form two concentric circles when driving at different rates
+    #this models that, and find the displacement.
+    #I'd explain the math, but its all algebra'd to hell, so just ask me to send a photo if you need it
     internal_radius = inside*con.cross_section_length/(outside-inside)
-    theta = inside/ internal_radius
+    theta = inside / internal_radius
     mid_radius = con.cross_section_length/2+internal_radius
     raw_x = math.cos(theta)*mid_radius
     raw_y = math.sin(theta)*mid_radius
@@ -110,12 +115,6 @@ def model_turn_circle(l,r): #this wont error out when given a negative number, b
 
 
     return [displacement_x,displacement_y,displacement_angle,length]
-    
-
-
-
-    
-
 
 
 def reconstruct(angles,l_rotations,r_rotations,verbose=False,file_name="NEWREC.log"):
@@ -159,10 +158,10 @@ def reconstruct(angles,l_rotations,r_rotations,verbose=False,file_name="NEWREC.l
         print(" -> file written and saved!")
         print()
     
-    return x,y
+    return (x,y)
 
-def load_nav_data(directory,file_name,endians = False):
-    file = open(os.path.join(directory,file_name),"r")
+def load_nav_data(file_name,endians = False):
+    file = open(os.path.join(file_name),"r")
     nav_obj = json.load(file)
 
     metadata = nav_obj["metadata"]
@@ -183,41 +182,11 @@ def load_nav_data(directory,file_name,endians = False):
         left_rotations.append(-9999)
         right_rotations.append(-9999)
     
-    return (metadata,left_rotations,right_rotations,angles)
+    return (metadata,left_rotations,right_rotations,angles,metadata["final-x"],metadata["final-y"])
 
-def apply_kernel(data,kernel,pad = True):
-    if(len(kernel)%2 == 1):
-        kernel_size = len(kernel)
-        half_kernel_size = math.floor(kernel_size/2)
-        start_index = half_kernel_size
-        end_index = len(data)-half_kernel_size
-
-        if(pad == True):
-            my_data = data.copy()
-            for i in range(half_kernel_size): #add padding
-                my_data.insert(0,0)
-                my_data.append(0)
-            start_index = 0
-            end_index = len(data)
-        else:
-            my_data = data
-
-        length = end_index-start_index
-        accumulator = [0]*(length)
-
-        for i in range(length):
-            for k in range(kernel_size):
-                index = (start_index+i+k)-half_kernel_size
-                accumulator[i]+=my_data[index]*kernel[k]
-        
-        return accumulator
-    else:
-        raise Exception("A kernel of size {} is invalid!".format(len(kernel)))
-
-
-def reconstruct_from_file(directory,file_name,kernel = False):
+def reconstruct_from_file(file_name,kernel = False):
     
-    nav_data = load_nav_data(directory,file_name,False)
+    nav_data = load_nav_data(file_name,False)
     metadata = nav_data[0]
     left_rotations = nav_data[1]
     right_rotations = nav_data[2]
@@ -280,4 +249,4 @@ def export_movement(name,angles,left_rotations,right_rotations,size,dist,target_
 
 if __name__ == "__main__":
     #[-1,3,1]/4.88 works really well for some fucking reason
-    reconstruct_from_file("nav-logs","cm-60-woodpanel-maxbattery.json",[-1,3,1])
+    reconstruct_from_file("nav-logs/cm-60-woodpanel-maxbattery.json",[-1,3,1])
