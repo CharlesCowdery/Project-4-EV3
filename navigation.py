@@ -86,32 +86,38 @@ def angle_from_dist_square(l,r): #this predicts angle based off of movement of t
 def model_turn_circle(l,r): #this wont error out when given a negative number, but the behavior is unaccounted for, and should be avoided
     inside = l*con.distance_scalar
     outside = r*con.distance_scalar
-    if(l == r):
-        return [0,0,0,l]
+    delta = outside-inside
+    length = inside
+
     if(l == 0 or r == 0): #todo, make this actually useful. Not super high priority though, since input kernels means zeros are rare
         return [0,0,0,0]
+    if(delta == 0):
+        return [0,0,0,length]#l
     
 
     #this assumes the robots tires essentially form two concentric circles when driving at different rates
     #this models that, and find the displacement.
     #I'd explain the math, but its all algebra'd to hell, so just ask me to send a photo if you need it
-    internal_radius = inside*con.cross_section_length/(outside-inside)
-    theta = inside / internal_radius
+    internal_radius = inside*con.cross_section_length/delta
+    theta = delta/con.cross_section_length
     mid_radius = con.cross_section_length/2+internal_radius
-    raw_x = math.cos(theta)*mid_radius
-    raw_y = math.sin(theta)*mid_radius
+    displacement_x  = math.cos(theta)*mid_radius-mid_radius
+    displacement_y = math.sin(theta)*mid_radius
     
-    displacement_x = (raw_x-mid_radius)
-    displacement_y = raw_y
 
     if(displacement_x != 0):
-        raw_theta = math.atan(displacement_y/displacement_x)*180/math.pi
+        raw_theta = math.atan(displacement_y/displacement_x)
     else:
-        raw_theta = 90
+        raw_theta = math.pi/2
 
-    displacement_angle = ((raw_theta) if raw_theta>0 else (180+raw_theta))-90
+    if raw_theta>0:
+        displacement_angle = raw_theta-math.pi/2
+    else:
+        displacement_angle = (math.pi/2+raw_theta)
 
-    length = math.sqrt(displacement_x**2 + displacement_y**2)
+    
+
+    length = math.sqrt(displacement_x*displacement_x + displacement_y*displacement_y)
 
 
     return [displacement_x,displacement_y,displacement_angle,length]
@@ -132,15 +138,15 @@ def reconstruct(angles,l_rotations,r_rotations,verbose=False,file_name="NEWREC.l
     x = 0
     y = 0
 
-    angle = -angles[0]        
+    angle = -angles[0]/180*math.pi + math.pi/2       
 
     if(verbose):print(" -> calculating position changes...")
     for i in range(len(deltas_l)):
         prediction = model_turn_circle(deltas_l[i],deltas_r[i])
         angle += prediction[2]
 
-        x+=prediction[3]*math.cos(math.radians(angle+90))
-        y+=prediction[3]*math.sin(math.radians(angle+90))
+        x+=prediction[3]*math.cos(angle)
+        y+=prediction[3]*math.sin(angle)
 
         if(verbose):
             file_string+="'delta_left':{0:9.6f}, 'delta_right':{1:9.6f}, 'delta_angle':{2:7.2f} 'gyro':{3:5.0f}, 'accumulated_angle':{4:7.2f}, 'predict_x':{5:5.4f}, 'predict_y':{6:5.1f}\n".format(
