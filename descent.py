@@ -1,6 +1,7 @@
 import random
 import json
 import math
+import copy
 import navigation as nav
 
 def pad(data,padding_size):
@@ -68,6 +69,8 @@ def load_padded_data(index_file_name,max_padding):
             file_data = nav.load_nav_data(file_name)
             data[file_name] = file_data
 
+            data[file_name][3].append(-9999)
+
             dataset = []
             for padding_size in range(1,max_padding+1):
                 sub_set = dict()
@@ -83,7 +86,7 @@ def load_padded_data(index_file_name,max_padding):
     return index
 
 def linear_fitness(d_x,d_y):
-    return math.abs(d_x)+math.abs(d_y)
+    return 1/(abs(d_x)+abs(d_y))
 
 fitness_function = linear_fitness
 
@@ -96,29 +99,31 @@ def get_fitness(index,kernel):
         for file_name in catagory["data-sets"]:
             dataset = catagory["data-sets"][file_name][dataset_index]
 
-            kerneled_left = apply_kernel(dataset["left"],kernel)
-            kerneled_right = apply_kernel(dataset["right"],kernel)
+            kerneled_left = apply_kernel(dataset["left"],kernel,False)
+            kerneled_right = apply_kernel(dataset["right"],kernel,False)
 
             kerneled_left.append(-9999)
             kerneled_right.append(-9999)
-            
-            angles = catagory["data"][file_name][3]
 
-            expected_x = catagory["data"][file_name][4]
-            expected_y = catagory["data"][file_name][5]
+            angles = catagory["file-data"][file_name][3]
+
+            expected_x = catagory["file-data"][file_name][4]
+            expected_y = catagory["file-data"][file_name][5]
 
             results = nav.reconstruct(angles, kerneled_left, kerneled_right)
 
             total_fitness += fitness_function(results[0]-expected_x,results[1]-expected_y)*weight
+    return total_fitness
 
 
 def get_fitness_set(index,kernels):
-    fitnesses = kernels.deepcopy()
+    fitnesses = copy.deepcopy(kernels)
     for padding_set_index in range(len(kernels)):
         padding_set = kernels[padding_set_index]
         for kernel_index in range(len(padding_set)):
             kernel = padding_set[kernel_index]
             fitnesses[padding_set_index][kernel_index] = get_fitness(index,kernel)
+    return fitnesses
 
 
 
@@ -132,15 +137,20 @@ def descend(index_file_name,max_reach,
             starting_siblings=10,#number of kernels generated per size
             safe_epochs=1       #number of safe epochs
             ):
+    kernels = spawnKernels(max_reach,starting_siblings,1)
     index = load_padded_data(index_file_name,max_reach)
     magnitude = initial_magnitude
     for epoch in range(epochs):
+        print("epoch {}:".format(epoch+1))
+        prev_fitness = get_fitness_set(index,kernels)
         for generation in range(generations):
-            1+1
+            print("\r -> running generation "+str(generation+1),end="")
+
+        print()
         
 
 
 
 if __name__ == "__main__":
-    print(spawnKernels(10,10))
+    descend("indexes/descent-data.json",10)
     #print(load_padded_data("indexes/descent-data.json",3))
