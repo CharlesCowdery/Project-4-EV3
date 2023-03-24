@@ -2,7 +2,16 @@
     "60":{
         "weight":1,
         "files":[
-            "other/nav-logs/cm-60-woodpanel-maxbattery.json"
+            "other/nav-logs/cm-60-woodpanel-maxbattery.json",
+            "other/nav-logs/cm-60-dormroom-maxbattery.json",
+            "other/nav-logs/cm-60-dormroom-highbattery-2.json",
+            "other/nav-logs/cm-60-dormroom-maxbattery-1.json",
+            "other/nav-logs/cm-60-dormroom-maxbattery-2.json",
+            "other/nav-logs/cm-60-dormroom-maxbattery-3.json",
+            "other/nav-logs/cm-60-dormroom-maxbattery-4.json",
+            "other/nav-logs/cm-60-dormroom-maxbattery-5.json",
+            "other/nav-logs/cm-60-dormroom-maxbattery-6.json",
+            "other/nav-logs/cm-60-dormroom-maxbattery-7.json"
         ]
     }
 }

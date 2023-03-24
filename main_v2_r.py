@@ -12,9 +12,9 @@ from time import sleep
 import time
 import math
 from datetime import datetime
-import constants as con
-import navigation as nav
-import devices
+import constants_r as con
+import navigation_r as nav
+import devices_r as devices
 
 
 left_motor = devices.left_motor
@@ -72,8 +72,8 @@ def drive(dist,angle): #input travel distance in cm and margin in cm
 
     while(True):
         current_angle = gyro.value(0)
-        l_rotations = left_motor.rotations
-        r_rotations = right_motor.rotations
+        l_rotations = left_motor.rotations-left_starting_rotation
+        r_rotations = right_motor.rotations-right_starting_rotation
 
         angle_array[index] = current_angle
         left_rotation_array[index] = l_rotations
@@ -96,6 +96,7 @@ def drive(dist,angle): #input travel distance in cm and margin in cm
             last_angle = current_angle
 
     nav.export_movement("latest.json",angle_array,left_rotation_array,right_rotation_array,index,dist,angle,start_time,end_time)
+    print(nav.predict_change(angle_array,left_rotation_array,right_rotation_array))
     #reconstruct(angle_array,left_rotation_array,right_rotation_array,dist,angle)
 
     
@@ -182,7 +183,11 @@ def goToXY(x,y):
     driveDistance(x,0.5,starting_angle+90)
 
 def main():
-    nav.initialize(devices)    
+    nav.initialize(devices)   
+    sleep(0.5)
+    left_motor.off(False)
+    right_motor.off(False)
+    drive(60,0)
 
 
 

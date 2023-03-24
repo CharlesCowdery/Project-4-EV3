@@ -3,9 +3,9 @@ from datetime import datetime
 import math
 import json
 import os
-import constants as con
-from descent import apply_kernel
-
+import constants_r as con
+#import numpy
+#import navperf
 
 #This file contains functions pertaining to sensor calibration
 #navigation estimation, and log import and exporting
@@ -13,14 +13,14 @@ from descent import apply_kernel
 gyro = 0
 left_motor = 0
 right_motor = 0
-move_tank = 0
+tank_drive = 0
 
 def initialize(devices):  #We get take a devices instance so the modules can share a device set
-    global gyro,left_motor,right_motor,move_tank
+    global gyro,left_motor,right_motor,tank_drive
     gyro = devices.gyro
     left_motor = devices.left_motor
     right_motor = devices.right_motor
-    move_tank = devices.move_tank
+    tank_drive = devices.tank_drive
 
     print("Calibrating!")
     gyro.calibrate()
@@ -51,7 +51,39 @@ def calibrate():
     length = gyro.angle/360*math.pi*con.cross_section_length
     average_rotation = (abs(delta_left)+abs(delta_right))/2
     print(length/average_rotation)
-    
+
+def pad(data,padding_size):
+    my_data = data.copy()
+    for i in range(padding_size): #add padding
+        my_data.insert(0,0)
+        my_data.append(0)
+    return my_data
+
+def apply_kernel(data,kernel,padding = True):
+    if(len(kernel)%2 == 1):
+        kernel_size = len(kernel)
+        half_kernel_size = math.floor(kernel_size/2)
+        
+        my_kernel = kernel.copy()
+        my_kernel.reverse()
+
+        my_data = pad(data,half_kernel_size)
+
+        length = len(my_data)
+        accumulator = [0]*(length)
+
+        for data_index in range(length):
+            for kernel_index in range(kernel_size):
+                data_position = data_index+kernel_index-half_kernel_size
+                if(data_position>0 and data_position<length):
+                    kernel_value = my_kernel[kernel_index]
+                    data_value = my_data[data_position]
+                    accumulator[data_index]+=data_value*kernel_value
+
+        return accumulator
+    else:
+        raise Exception("A kernel of size {} is invalid!".format(len(kernel)))
+ 
 def angle_from_dist_square(l,r): #this predicts angle based off of movement of the wheels.
     short = l
     long = r
@@ -122,15 +154,22 @@ def model_turn_circle(l,r): #this wont error out when given a negative number, b
 
     return [displacement_x,displacement_y,displacement_angle,length]
 
+def purge(array,endian):
+    new_arr = []
+    for i in range(len(array)):
+        value = array[i]
+        if(value==endian):
+            break
+        new_arr.append(value)
+    return new_arr
 
 def reconstruct(angles,l_rotations,r_rotations,verbose=False,file_name="NEWREC.log"):
     if(verbose):print("reconstructing route:")
     deltas_l = []
     deltas_r = []
-    i = 1
 
     if(verbose):print(" -> Getting rotation deltas...")
-    while(angles[i]!=-9999):
+    for i in range(1,len(l_rotations)):
         deltas_l.append(l_rotations[i]-l_rotations[i-1])
         deltas_r.append(r_rotations[i]-r_rotations[i-1])
         i+=1
@@ -199,15 +238,18 @@ def reconstruct_from_file(file_name,kernel = False):
     angles = nav_data[3]
 
     if(kernel!=False):                      
+        #left_rotations = numpy.convolve(left_rotations,kernel).tolist()
+        #right_rotations = numpy.convolve(right_rotations,kernel).tolist()
         left_rotations = apply_kernel(left_rotations,kernel)
         right_rotations = apply_kernel(right_rotations,kernel)
 
     angles.append(-9999)
-    left_rotations.append(-9999)
-    right_rotations.append(-9999)
+    #left_rotations.append(-9999)
+    #right_rotations.append(-9999)
 
     new_file_name = "REC-"+file_name.split(".")[0]+".log"
-    reconstruct(angles, left_rotations, right_rotations, False, new_file_name)
+    #return navperf.reconstruct(left_rotations,right_rotations,len(left_rotations))
+    return reconstruct(angles, left_rotations, right_rotations, False, new_file_name)
 
 
 def export_movement(name,angles,left_rotations,right_rotations,size,dist,target_angle,start_time,end_time):
@@ -253,6 +295,43 @@ def export_movement(name,angles,left_rotations,right_rotations,size,dist,target_
 
     print(" -> Movement export done!")
 
+def predict_change(angles,left,right,endian=-9999):
+    if(endian!=False):
+        new_left = []
+        new_right = []
+        index = 0
+        while(left[index]!=endian):
+            new_left.append(left[index])
+            new_right.append(right[index])
+            index+=1
+        left = new_left
+        right = new_right
+    left_x_rotations = apply_kernel(left,con.kernel_x)
+    right_x_rotations = apply_kernel(right,con.kernel_x)
+    left_y_rotations = apply_kernel(left,con.kernel_y)
+    right_y_rotations = apply_kernel(right,con.kernel_y)
+
+    #left_x_rotations.append(endian)
+    #right_x_rotations.append(endian)
+    #left_y_rotations.append(endian)
+    #right_y_rotations.append(endian)
+
+    results_x = reconstruct(angles,left_x_rotations,right_x_rotations,False)
+    results_y = reconstruct(angles,left_y_rotations,right_y_rotations,False)
+    #results_x = navperf.reconstruct(left_x_rotations,right_x_rotations,len(left_x_rotations))
+    #results_y = navperf.reconstruct(left_y_rotations,right_y_rotations,len(left_x_rotations))
+
+    print(results_x)
+    print(results_y)
+
+    return [results_x[0],results_y[1]]
+
+    
 if __name__ == "__main__":
     #[-1,3,1]/4.88 works really well for some fucking reason
-    reconstruct_from_file("nav-logs/cm-60-woodpanel-maxbattery.json",[-1,3,1])
+    #[0.004050715192758465, 0.00293527352267748, 0.9821536092306906] gen purp
+    #[-0.16531845167217551, -0.42151239124565604, 0.04036665388278525, 0.08433965613119657, 0.053226907017891914, -0.008490659935598253, 0.2421899618716739] y
+    #[0.06239878019825997, -0.6276032546357554, 1.0553617880647408, 5.2510292791663185, -0.5654825282673032, 1.677137892137101, -3.2311978278927684] x
+    file_data = load_nav_data("other/nav-logs/cm-60-woodpanel-maxbattery.json")
+    print(predict_change(file_data[3],file_data[1],file_data[2],False))
+    #print(reconstruct_from_file("other/nav-logs/cm-60-woodpanel-maxbattery.json",con.kernel_y))
