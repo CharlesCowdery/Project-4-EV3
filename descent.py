@@ -9,230 +9,12 @@ import pyximport; pyximport.install()
 import navperf
 import os
 from multiprocessing.pool import Pool
+import datetime
 
-def pad(data,padding_size):
-    my_data = data.copy()
-    for i in range(padding_size): #add padding
-        my_data.insert(0,0)
-        my_data.append(0)
-    return my_data
-
-def apply_kernel(data,kernel,padding = True):
-    if(len(kernel)%2 == 1):
-        kernel_size = len(kernel)
-        half_kernel_size = math.floor(kernel_size/2)
-        start_index = half_kernel_size
-        end_index = len(data)-half_kernel_size
-
-        if(padding == True):
-            my_data = pad(data,half_kernel_size)
-            start_index = 0
-            end_index = len(data)
-        else:
-            my_data = data
-
-        length = end_index-start_index
-        accumulator = [0]*(length)
-
-        for i in range(length):
-            for k in range(kernel_size):
-                index = (start_index+i+k)-half_kernel_size
-                accumulator[i]+=my_data[index]*kernel[k]
-        
-        return accumulator
-    else:
-        raise Exception("A kernel of size {} is invalid!".format(len(kernel)))
+import descent_utils as des_utils
+from descent_utils import prune
 
 
-def spawnKernels(min_reach,max_reach,sibling_count,rand_scalar = 1):
-    base_kernels = []
-    for half_size in range(min_reach,max_reach+1):
-        kernel = [0]*(1+half_size*2)
-        base_kernels.append(kernel.copy())
-
-    kernels = []
-    for i in range(len(base_kernels)):
-        template_kernel = base_kernels[i]
-        template_length = len(template_kernel)
-        for k in range(sibling_count):
-            kernel = template_kernel.copy()
-            for p in range(template_length):
-                kernel[p] = (random.random()*2-1)*rand_scalar
-            kernels.append(kernel)
-                
-    return kernels
-
-def load_padded_data(index_file_name,max_padding):
-    index = json.load(open(index_file_name))
-    for catagory in index:
-        files = index[catagory]["files"]
-        data = dict()
-        datasets = dict()
-        for file_name in files:
-            file_data = nav.load_nav_data(file_name)
-            data[file_name] = file_data
-
-            data[file_name][3].append(-9999)
-
-            sub_set = dict()
-            sub_set["left"] = numpy.asarray(file_data[1])
-            sub_set["right"] = numpy.asarray(file_data[2])
-
-            datasets[file_name] = sub_set
-        
-        index[catagory]["file-data"] = data
-        index[catagory]["data-sets"] = datasets
-    return index
-
-def linear_fitness(delta_x_arr,delta_y_arr,weight):
-    total_abs_x = 0
-    total_abs_y = 0
-    for delta_x in delta_x_arr:
-        total_abs_x+=math.exp(math.sqrt(abs(delta_x)**1.5))-1
-    for delta_y in delta_y_arr:
-        total_abs_y+=math.exp(math.sqrt(abs(delta_y)**1.5))-1
-    return 1/(total_abs_x)*len(weight)
-    #*len(weight) just makes fitness more readable, it doesnt affect results
-
-fitness_function = linear_fitness
-time_spend_reconstructing = 0
-time_spend_kerneling = 0
-
-def test_kernel(catagory,file_name,kernel):
-    left = catagory["data-sets"][file_name]["left"]
-    right = catagory["data-sets"][file_name]["right"]
-    kerneled_left = numpy.convolve(left,kernel)
-    kerneled_right = numpy.convolve(right,kernel)
-    expected_x = catagory["file-data"][file_name][4]
-    expected_y = catagory["file-data"][file_name][5]
-    return [navperf.reconstruct(kerneled_left, kerneled_right, kerneled_left.size),[expected_x,expected_y]]
-
-def get_fitness(index,kernel):
-    global time_spend_reconstructing, time_spend_kerneling
-    delta_x_arr = []
-    delta_y_arr = []
-    weights = []
-    reconstruction_time = 0
-    kerneling_time = 0
-    for catagory_name in index:
-        weight = index[catagory_name]["weight"]
-        catagory = index[catagory_name]
-        for file_name in catagory["data-sets"]:
-            dataset = catagory["data-sets"][file_name]
-
-            kerneling_time -= time.perf_counter()
-            kerneled_left = numpy.convolve(dataset["left"],kernel)
-            kerneled_right = numpy.convolve(dataset["right"],kernel)
-            #kerneled_left = apply_kernel(dataset["left"],kernel,False)
-            #kerneled_right = apply_kernel(dataset["right"],kernel,False)
-            kerneling_time += time.perf_counter()
-
-
-            angles = catagory["file-data"][file_name][3]
-
-            expected_x = catagory["file-data"][file_name][4]
-            expected_y = catagory["file-data"][file_name][5]
-
-
-            reconstruction_time -= time.perf_counter()
-            results = navperf.reconstruct(kerneled_left, kerneled_right, kerneled_left.size)
-            reconstruction_time += time.perf_counter()
-
-            #time_spend_reconstructing+=delta_rec
-
-            #time_spend_kerneling+=delta_kernel
-            
-            delta_x_arr.append(results[0]-expected_x)
-            delta_y_arr.append(results[1]-expected_y)
-            weights.append(weight)
-    return [fitness_function(delta_x_arr,delta_y_arr,weights),reconstruction_time,kerneling_time]
-
-
-def get_fitness_set(kernels,child_in_place=False):
-    fitnesses = kernels.copy()
-    reconstruction_time = 0
-    kerneling_time = 0
-    total_time = -time.perf_counter()
-    fitness_time = 0
-    for kernel_index in range(len(kernels)):
-        if child_in_place:
-            child_set = kernels[kernel_index]
-            for child_index in range(len(child_set)):
-
-                fitness_time+=-time.perf_counter()
-                results = get_fitness(index,child_set[child_index])
-                fitness_time+=time.perf_counter()
-
-                fitnesses[kernel_index][child_index] = results[0]
-                reconstruction_time += results[1]
-                kerneling_time += results[2]
-        else:  
-            kernel = kernels[kernel_index]
-
-            fitness_time+=-time.perf_counter()
-            results = get_fitness(index,kernel)
-            fitness_time+=time.perf_counter()
-
-            fitnesses[kernel_index] = results[0]
-            reconstruction_time += results[1]
-            kerneling_time += results[2]
-    total_time+=time.perf_counter()
-    #return [numpy.asarray(fitnesses),reconstruction_time,kerneling_time]
-    return [fitnesses,reconstruction_time,kerneling_time,total_time,fitness_time]
-
-def spawn_children(kernel,offspring_count,magnitude):
-    child_array = []
-    for i in range(offspring_count):
-        child_kernel = kernel.copy()
-        for position in range(len(kernel)):
-            child_kernel[position]+=(random.random()*2-1)*magnitude
-        child_array.append(child_kernel)
-    return child_array
-
-
-def spawn_children_set(kernels,offspring_count,magnitude):
-    children = copy.deepcopy(kernels)
-    for kernel_index in range(len(kernels)):
-        kernel = kernels[kernel_index]
-        children[kernel_index] = spawn_children(kernel,offspring_count,magnitude)
-    return children
-
-def select_fitess_member(parent,parent_fitness,children,children_fitness):
-    highest_fitness = parent_fitness
-    highest_fitness_kernel = parent
-    for child_index in range(len(children_fitness)):
-        if(children_fitness[child_index] > highest_fitness):
-            highest_fitness = children_fitness[child_index]
-            highest_fitness_kernel = children[child_index]
-    
-    return (highest_fitness_kernel,highest_fitness)
-
-def select_fitess_member_set(parents,parents_fitness,children,children_fitness):
-    fitnesses = copy.deepcopy(parents_fitness)
-    highest_fitness_kernels = copy.deepcopy(parents_fitness)
-    max_fitness = 0
-    best_kernel = []
-    total_fitness = 0
-    total_kernels = 0
-    for kernel_index in range(len(parents_fitness)):
-        selection_results = select_fitess_member(
-                parents[kernel_index],
-                parents_fitness[kernel_index],
-                children[kernel_index],
-                children_fitness[kernel_index]
-            )
-        
-        highest_fitness_kernels[kernel_index] = selection_results[0]
-        fitnesses[kernel_index] = selection_results[1]
-
-        total_kernels+=1
-        total_fitness+=selection_results[1]
-
-        if(selection_results[1]>max_fitness):
-            max_fitness = selection_results[1]
-            best_kernel = selection_results[0]
-    
-    return (highest_fitness_kernels,fitnesses,max_fitness,best_kernel,total_fitness/total_kernels)
 
 
 def get_fitness_threaded(index,kernels,thread_count,pool):
@@ -256,7 +38,7 @@ def get_fitness_threaded(index,kernels,thread_count,pool):
     array_time += time.perf_counter()
     
     deploying_workers_time = -time.perf_counter()
-    workers =(pool.starmap_async(get_fitness_set, chunks, chunksize=1))
+    workers =(pool.starmap_async(des_utils.get_fitness_set, chunks, chunksize=1))
     deploying_workers_time += time.perf_counter()
 
     worker_time = 0
@@ -289,46 +71,6 @@ def get_fitness_threaded(index,kernels,thread_count,pool):
             fitness_time]
 
 
-
-def sort_kernels(kernels,fitnesses):
-    def sorter(e):
-            return e[1]
-        
-    sortable_array = []
-    for i in range(len(kernels)):
-        sortable_array.append([kernels[i],fitnesses[i]])
-    
-    sortable_array.sort(key = sorter, reverse = True)
-
-    kernel_array = []
-    fitness_array = []
-
-    for i in range(len(sortable_array)):
-        kernel_array.append(sortable_array[i][0])
-        fitness_array.append(sortable_array[i][1])
-
-    return [kernel_array,fitness_array,sortable_array]
-
-
-def prune(kernels,fitnesses,percent):
-    
-    sortable_array = sort_kernels(kernels,fitnesses)[2]
-
-    size = len(sortable_array)
-    clipping_size = math.floor(size*(1-percent))
-    final_kernels = []
-    final_fitnesses = []
-    for i in range(size):
-        if(i<clipping_size):
-            final_kernels.append(sortable_array[i][0].copy())
-            final_fitnesses.append(sortable_array[i][1])
-        else:
-            final_kernels.append(sortable_array[i%clipping_size][0].copy())
-            final_fitnesses.append(sortable_array[i%clipping_size][1])
-    print()
-    print("   -pruned {}%".format(percent*100))
-
-    return [final_kernels,final_fitnesses]
 
 
 def generate_report(best_kernels,best_fitnesses,epochs,initial_magnitude,generations,
@@ -373,7 +115,7 @@ def generate_report(best_kernels,best_fitnesses,epochs,initial_magnitude,generat
             epoch_data[catagory_name] = dict()
             for file_name in catagory["files"]:
                 result_data = dict()
-                results = test_kernel(catagory,file_name,best_kernel)
+                results = des_utils.test_kernel(catagory,file_name,best_kernel)
                 experimental = dict()
                 predicted = dict()
                 experimental["x"] = results[1][0]
@@ -392,9 +134,7 @@ def generate_report(best_kernels,best_fitnesses,epochs,initial_magnitude,generat
     file.write(json.dumps(log,indent=4))
     file.close()
 
-def init_worker(data):
-        global index
-        index = data
+
 
 def descend(index_file_name,max_reach,min_reach,
             generations=100,    #number of iterations each epoch
@@ -403,22 +143,38 @@ def descend(index_file_name,max_reach,min_reach,
             initial_magnitude=1,#starting max magnitude of modifications. Halved every generation
             sibling_multiplier=10,#number of kernels generated per size
             operators = None,
-            threads=os.cpu_count()
+            threads=os.cpu_count(),
+            initial_kernels = [],
+            log_file_name = "descent-latest.log",
+            kernel_file_name = "kernels.json"
             ):
     global index
-    kernels = spawnKernels(min_reach,max_reach,sibling_multiplier*threads,1)
-    index = load_padded_data(index_file_name,max_reach)
+
+    kernel_count = (max_reach-min_reach+1)*sibling_multiplier*threads
+
+    print("Spawning kernels: ")
+    if(len(initial_kernels)<kernel_count):
+        kernel_delta = kernel_count-len(initial_kernels)
+        kernels = des_utils.spawnKernels(min_reach,max_reach,sibling_multiplier*threads,1)[0:kernel_delta]+initial_kernels
+    else:
+        kernels = initial_kernels
+    print("Done! Total kernel load: "+str(len(kernels)*offspring_count))
+
+
+    index = des_utils.load_padded_data(index_file_name,max_reach)
+    des_utils.initialize(_index=index)
+
     magnitude = initial_magnitude
     
 
     
     print("initializing pool")
-    
-    pool = Pool(processes=threads,initializer=init_worker,initargs=(index,))
+    pool = Pool(processes=threads,initializer=des_utils.initialize,initargs=(index,))
     print("Pool initialized")
 
-    print("Total kernel load: "+str(len(kernels)*offspring_count))
+
     console_width = (os.get_terminal_size())[0]
+    print(console_width)
 
     cols = console_width
 
@@ -436,9 +192,15 @@ def descend(index_file_name,max_reach,min_reach,
     worker_deploy_time = 0
     worker_time = 1
     fitness_time = 1
+
+    best_delta_y = 0
+    worst_delta_y = 0
+    best_delta_x = 0
+    worst_delta_x = 0
+
     for epoch in range(epochs):
         print("epoch {} (magnitude:{}):".format(epoch+1,magnitude))
-        prev_fitness = get_fitness_set(kernels)[0]
+        prev_fitness = des_utils.get_fitness_set(kernels)[0]
         max_fitness = 0
         avg_fitness = 0
         gen_time = 1
@@ -459,9 +221,17 @@ def descend(index_file_name,max_reach,min_reach,
                 print("   -> best fitness of last gen: {:.4f}".format(max_fitness))
                 print(" "*cols,end="\r")
                 best_kernel_text = "   -> best kernel last gen: "+str(best_kernel)
-                print(best_kernel_text)
+                #print(best_kernel_text)
+                #print(" "*cols,end="\r")
+                print("   -> avg fitness:   {:.6f}".format(avg_fitness))
                 print(" "*cols,end="\r")
-                print("   -> avg fitness: {:.6f}".format(avg_fitness))
+                print("   -> best delta y:  {:.6f}".format(best_delta_y))
+                print(" "*cols,end="\r")
+                print("   -> worst delta y: {:.6f}".format(worst_delta_y))
+                print(" "*cols,end="\r")
+                print("   -> best delta x:  {:.6f}".format(best_delta_x))
+                print(" "*cols,end="\r")
+                print("   -> worst delta x: {:.6f}".format(worst_delta_x))
                 print(" "*cols,end="\r")
                 print("   -> total generation time: {:.6f}s".format(gen_time))
                 print(" "*cols,end="\r")
@@ -479,15 +249,16 @@ def descend(index_file_name,max_reach,min_reach,
                 print(" "*cols,end="\r")
                 print("                -> kerneling: {:.1f}%".format(time_spend_kerneling/fitness_time*100))
                 if(generation < generation_length-1):
-                    print("\033[F"*11,end="")
-                    for i in range(math.ceil(len(best_kernel_text)/console_width)):
-                        print("\033[F",end="")
-                    1+1
+                    print("\033[F"*(15),end="")
+                    #print(len(best_kernel_text),console_width,len(best_kernel_text)/(console_width-20))
+                    #time.sleep(1)
+                    #extra_rows = math.ceil(len(best_kernel_text)/(console_width)+1)
+                    #print("\033[F"*extra_rows,end="")
             time_spend_reconstructing = 0
             time_spend_kerneling = 0
 
             
-            children = spawn_children_set(kernels,offspring_count,magnitude)
+            children = des_utils.spawn_children_set(kernels,offspring_count,magnitude)
             #print(children)
             eval_time = -time.perf_counter()
             fitness_results = get_fitness_threaded(index,children,threads,pool)
@@ -502,7 +273,7 @@ def descend(index_file_name,max_reach,min_reach,
             fitness_time = fitness_results[6]
             #child_fitness = get_fitness_set(index,children,True)[0]
 
-            selection_results = select_fitess_member_set(kernels,prev_fitness,children,child_fitness)
+            selection_results = des_utils.select_fitess_member_set(kernels,prev_fitness,children,child_fitness)
 
             kernels = selection_results[0]
             prev_fitness = selection_results[1]
@@ -514,6 +285,15 @@ def descend(index_file_name,max_reach,min_reach,
             end = time.perf_counter()
             gen_time = end-start
 
+            kernel_deltas = des_utils.get_fitness(index,best_kernel,True)
+
+            kernel_deltas[1].sort(key = abs)
+            kernel_deltas[0].sort(key = abs)
+
+            best_delta_x  = kernel_deltas[0][0]
+            best_delta_y  = kernel_deltas[1][0]
+            worst_delta_x = kernel_deltas[0][len(kernel_deltas)-1]
+            worst_delta_y = kernel_deltas[1][len(kernel_deltas)-1]
             #if(generation>2):
             #    pool.close()
             #    exit()
@@ -524,25 +304,26 @@ def descend(index_file_name,max_reach,min_reach,
         best_fitnesses.append(max_fitness)
         average_fitness_preop.append(avg_fitness)
 
-        sorted = sort_kernels(kernels,prev_fitness)
+        sorted = des_utils.sort_kernels(kernels,prev_fitness)
         kernels = sorted[0]
         prev_fitness = sorted[1]
         median_fitness_preop.append(prev_fitness[math.floor(len(kernels)/2)])
 
         if operators!=None:
-            current_operator = operators[epoch]
-            if current_operator != None:
-                if(type(current_operator) == list):
-                    args = current_operator[1]
-                    results = current_operator[0](kernels,prev_fitness, *args)
-                    kernels = results[0]
-                    prev_fitness = results[1]
-                else:
-                    results = current_operator(kernels,prev_fitness)
-                    kernels = results[0]
-                    prev_fitness = results[1]
+            if(len(operators) > epoch):
+                current_operator = operators[epoch]
+                if current_operator != None:
+                    if(type(current_operator) == list):
+                        args = current_operator[1]
+                        results = current_operator[0](kernels,prev_fitness, *args)
+                        kernels = results[0]
+                        prev_fitness = results[1]
+                    else:
+                        results = current_operator(kernels,prev_fitness)
+                        kernels = results[0]
+                        prev_fitness = results[1]
 
-        sorted = sort_kernels(kernels,prev_fitness)
+        sorted = des_utils.sort_kernels(kernels,prev_fitness)
         kernels = sorted[0]
         prev_fitness = sorted[1]
         median_fitness_postop.append(prev_fitness[math.floor(len(kernels)/2)])
@@ -573,22 +354,59 @@ def descend(index_file_name,max_reach,min_reach,
         best_kernels=best_kernels,
         generations=generations,
         best_fitnesses=best_fitnesses,
-        log_file_name="descent-log.json"
+        log_file_name=log_file_name
         )
+    
+    kernel_file = open(kernel_file_name,"w")
+    kernel_file.write(json.dumps(kernels,indent=4))
+    kernel_file.close()
+
+    return kernels
         
+def continous_descent(stop_hour):
+    i = 0
+    now = datetime.datetime.now()
+    kernels = []
+    while(now.hour < stop_hour):
+        i+=1
+        print("The time is now {}:{}".format(now.hour,now.minute))
+        print("ITERATION {}".format(i))
+        print()
+        now = datetime.datetime.now()
+        kernels = descend("other/indexes/descent-data.json",
+            max_reach=7,
+            min_reach=2,
+            generations=[100,100,100,100,100,100,100,100,100],
+            epochs=9,
+            offspring_count=4,
+            initial_magnitude=1,
+            sibling_multiplier=10,
+            operators=[[prune,[0.07]],[prune,[0.07]],[prune,[0.07]],[prune,[0.07]],[prune,[0.07]],[prune,[0.07]],[prune,[0.07]]],
+            initial_kernels = kernels,
+            log_file_name="other/descent-logs/y-logs/descent-log-{}.log".format(i),
+            kernel_file_name="other/descent-logs/y-logs/kernels-{}.log".format(i)
+            )
+        print()
+        
+    
+    print("Time limit reached. Stopping Incarnations")
+    print("The time is now {}:{}".format(now.hour,now.minute))
 
 
 
 if __name__ == "__main__":
     print()
+    #continous_descent(8)
+    #exit()
     descend("other/indexes/descent-data.json",
             max_reach=6,
-            min_reach=4,
-            generations=[200,200,200,200,100,100,100,100],
-            epochs=7,
+            min_reach=1,
+            generations=[5,200,200,200,100,100,100,100],
+            epochs=1,
             offspring_count=3,
-            sibling_multiplier=100,
-            operators=[[prune,[0.5]],[prune,[0.15]],[prune,[0.20]],[prune,[0.30]],[prune,[0.75]],[prune,[0.75]],None]
+            sibling_multiplier=10,
+            operators=[[prune,[0.5]],[prune,[0.15]],[prune,[0.20]],[prune,[0.30]],[prune,[0.75]],[prune,[0.75]],None],
+            initial_kernels = [[0,1,0]]
             )
     #data = (load_padded_data("other/indexes/descent-data.json",3))
     #angles = data["60"]["file-data"]['other/nav-logs/cm-60-woodpanel-maxbattery.json'][3]

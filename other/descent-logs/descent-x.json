@@ -1,0 +1,921 @@
+{
+    "metadata": {
+        "index-file": "other/indexes/descent-data.json",
+        "epoch-count": 7,
+        "max-reach": 6,
+        "generations": [
+            200,
+            200,
+            200,
+            200,
+            100,
+            100,
+            100,
+            100
+        ],
+        "offspring-count": 3,
+        "initial-magnitude": 1,
+        "best-kernel": [
+            0.14996555398570047,
+            0.04809616607637908,
+            0.538198337832747,
+            -0.21076100332381165,
+            -0.7880205542164437,
+            1.3036516989347968,
+            -0.06547525121355663,
+            3.950534254611869,
+            1.8092108033696699,
+            1.4117280462721467,
+            -3.1467193641767643,
+            3.0503839270503703,
+            -3.885446708807671
+        ],
+        "best-fitness": 3.899955021266168,
+        "description": "no description"
+    },
+    "epochs": {
+        "epoch-1": {
+            "best-kernel": [
+                -1.1201077301968005,
+                0.17707655248658605,
+                2.0524413494929066,
+                -1.396180273039325,
+                0.1952710675562439,
+                0.050043988930023486,
+                2.5845178335524674,
+                -2.2635424087933247,
+                0.5251833269763035
+            ],
+            "best-fitness": 1.0432731195527736,
+            "results": {},
+            "generations": 200,
+            "magnitude": 1.0,
+            "average-fitness-preop": 0.5575324159428852,
+            "average-fitness-postop": 0.6402958550800146,
+            "median-fitness-preop": 0.5525789933945627,
+            "median-fitness-postop": 0.6215463780526521,
+            "60": {
+                "other/nav-logs/cm-60-woodpanel-maxbattery.json": {
+                    "experimental": {
+                        "x": -2.5,
+                        "y": 59
+                    },
+                    "predicted": {
+                        "x": -2.491174836620522,
+                        "y": 683.3172683002165
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery.json": {
+                    "experimental": {
+                        "x": -2.8,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.6158315259479603,
+                        "y": 674.7074185866239
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-highbattery-2.json": {
+                    "experimental": {
+                        "x": -2.5,
+                        "y": 58.25
+                    },
+                    "predicted": {
+                        "x": -2.524071372531017,
+                        "y": 681.9558603950038
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-1.json": {
+                    "experimental": {
+                        "x": -1.55,
+                        "y": 57.5
+                    },
+                    "predicted": {
+                        "x": -2.7948862188506878,
+                        "y": 678.0020266729019
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-2.json": {
+                    "experimental": {
+                        "x": -2.95,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -1.4597064342856367,
+                        "y": 678.4586402336835
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-3.json": {
+                    "experimental": {
+                        "x": -2.6,
+                        "y": 57.9
+                    },
+                    "predicted": {
+                        "x": -3.2508450315750026,
+                        "y": 675.0861325600983
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-4.json": {
+                    "experimental": {
+                        "x": -3,
+                        "y": 58.3
+                    },
+                    "predicted": {
+                        "x": -2.888257357462355,
+                        "y": 681.1398168898702
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-5.json": {
+                    "experimental": {
+                        "x": -2.7,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.1631458411291105,
+                        "y": 684.2959500847871
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-6.json": {
+                    "experimental": {
+                        "x": -2.6,
+                        "y": 58.6
+                    },
+                    "predicted": {
+                        "x": -1.5170803424587394,
+                        "y": 674.1113799230757
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-7.json": {
+                    "experimental": {
+                        "x": -2.7,
+                        "y": 58.3
+                    },
+                    "predicted": {
+                        "x": -2.6926336929561887,
+                        "y": 675.0460343120724
+                    }
+                }
+            }
+        },
+        "epoch-2": {
+            "best-kernel": [
+                -0.7603181424744387,
+                0.24285452481449743,
+                1.3175117938788932,
+                -0.20675829811039492,
+                3.0157090611915307,
+                -0.4197190488646615,
+                -0.12437666410461024,
+                0.3029079255290481,
+                2.260017876531438,
+                -4.015557865747795,
+                0.6498282615918086
+            ],
+            "best-fitness": 1.5156181502839392,
+            "results": {},
+            "generations": 200,
+            "magnitude": 0.5,
+            "average-fitness-preop": 0.7761231289750348,
+            "average-fitness-postop": 0.82933789051783,
+            "median-fitness-preop": 0.7557519836188484,
+            "median-fitness-postop": 0.8000000362369218,
+            "60": {
+                "other/nav-logs/cm-60-woodpanel-maxbattery.json": {
+                    "experimental": {
+                        "x": -2.5,
+                        "y": 59
+                    },
+                    "predicted": {
+                        "x": -2.282550451625294,
+                        "y": 919.6842131296087
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery.json": {
+                    "experimental": {
+                        "x": -2.8,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -3.0758413997751894,
+                        "y": 915.7123651911277
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-highbattery-2.json": {
+                    "experimental": {
+                        "x": -2.5,
+                        "y": 58.25
+                    },
+                    "predicted": {
+                        "x": -2.2719954112424205,
+                        "y": 918.2142033062582
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-1.json": {
+                    "experimental": {
+                        "x": -1.55,
+                        "y": 57.5
+                    },
+                    "predicted": {
+                        "x": -1.7643833026437488,
+                        "y": 914.3310640992188
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-2.json": {
+                    "experimental": {
+                        "x": -2.95,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.6433449185258624,
+                        "y": 917.6969905309176
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-3.json": {
+                    "experimental": {
+                        "x": -2.6,
+                        "y": 57.9
+                    },
+                    "predicted": {
+                        "x": -3.1389863980035364,
+                        "y": 912.9017721303861
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-4.json": {
+                    "experimental": {
+                        "x": -3,
+                        "y": 58.3
+                    },
+                    "predicted": {
+                        "x": -2.606135991829628,
+                        "y": 916.2509055162923
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-5.json": {
+                    "experimental": {
+                        "x": -2.7,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.8007919664236054,
+                        "y": 923.9108885769585
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-6.json": {
+                    "experimental": {
+                        "x": -2.6,
+                        "y": 58.6
+                    },
+                    "predicted": {
+                        "x": -1.2160196853375682,
+                        "y": 915.014094568935
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-7.json": {
+                    "experimental": {
+                        "x": -2.7,
+                        "y": 58.3
+                    },
+                    "predicted": {
+                        "x": -2.7974580464499894,
+                        "y": 909.3287927470153
+                    }
+                }
+            }
+        },
+        "epoch-3": {
+            "best-kernel": [
+                0.14261656122686311,
+                0.15216471213420335,
+                0.7216493525822625,
+                -0.2533542262971098,
+                -0.8264172861882104,
+                1.0985582408040688,
+                0.10037293088114069,
+                3.8576743152935773,
+                2.2044001769108066,
+                1.0673988763026852,
+                -2.9127036250401734,
+                2.7860055479715773,
+                -3.9395846829988757
+            ],
+            "best-fitness": 1.9413505143926542,
+            "results": {},
+            "generations": 200,
+            "magnitude": 0.3333333333333333,
+            "average-fitness-preop": 0.9498894234684362,
+            "average-fitness-postop": 1.0394660664402016,
+            "median-fitness-preop": 0.9233843188564878,
+            "median-fitness-postop": 1.0207870470889702,
+            "60": {
+                "other/nav-logs/cm-60-woodpanel-maxbattery.json": {
+                    "experimental": {
+                        "x": -2.5,
+                        "y": 59
+                    },
+                    "predicted": {
+                        "x": -2.8789712260805445,
+                        "y": 1224.79729585118
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery.json": {
+                    "experimental": {
+                        "x": -2.8,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.3040827535122004,
+                        "y": 1222.2527117909387
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-highbattery-2.json": {
+                    "experimental": {
+                        "x": -2.5,
+                        "y": 58.25
+                    },
+                    "predicted": {
+                        "x": -2.1112606697508873,
+                        "y": 1221.8136203207084
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-1.json": {
+                    "experimental": {
+                        "x": -1.55,
+                        "y": 57.5
+                    },
+                    "predicted": {
+                        "x": -1.7549193463000563,
+                        "y": 1217.501836890676
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-2.json": {
+                    "experimental": {
+                        "x": -2.95,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.8536683098692595,
+                        "y": 1226.4075176700321
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-3.json": {
+                    "experimental": {
+                        "x": -2.6,
+                        "y": 57.9
+                    },
+                    "predicted": {
+                        "x": -3.3055976865168226,
+                        "y": 1210.5601556665192
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-4.json": {
+                    "experimental": {
+                        "x": -3,
+                        "y": 58.3
+                    },
+                    "predicted": {
+                        "x": -3.3314577968894294,
+                        "y": 1222.5634880312887
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-5.json": {
+                    "experimental": {
+                        "x": -2.7,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.5978519203595383,
+                        "y": 1228.1772450152168
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-6.json": {
+                    "experimental": {
+                        "x": -2.6,
+                        "y": 58.6
+                    },
+                    "predicted": {
+                        "x": -2.310021965894638,
+                        "y": 1221.5355554753048
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-7.json": {
+                    "experimental": {
+                        "x": -2.7,
+                        "y": 58.3
+                    },
+                    "predicted": {
+                        "x": -2.7746597022516397,
+                        "y": 1214.5471624056586
+                    }
+                }
+            }
+        },
+        "epoch-4": {
+            "best-kernel": [
+                0.10189126483993896,
+                0.08214897443883157,
+                0.5874770896688389,
+                -0.27217063996420165,
+                -0.7336417144300865,
+                1.3095728076016488,
+                -0.06992582276168158,
+                3.9546595194368455,
+                1.928601982210985,
+                1.3487692253121928,
+                -3.1636671947665653,
+                2.9490873801881765,
+                -3.8486070455652803
+            ],
+            "best-fitness": 3.0668893890282725,
+            "results": {},
+            "generations": 200,
+            "magnitude": 0.25,
+            "average-fitness-preop": 1.1439980436411068,
+            "average-fitness-postop": 1.2800065041975837,
+            "median-fitness-preop": 1.1236322886370973,
+            "median-fitness-postop": 1.2624173444016942,
+            "60": {
+                "other/nav-logs/cm-60-woodpanel-maxbattery.json": {
+                    "experimental": {
+                        "x": -2.5,
+                        "y": 59
+                    },
+                    "predicted": {
+                        "x": -2.5578394108993843,
+                        "y": 1247.2331205727157
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery.json": {
+                    "experimental": {
+                        "x": -2.8,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.6670744841500857,
+                        "y": 1246.3239154138957
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-highbattery-2.json": {
+                    "experimental": {
+                        "x": -2.5,
+                        "y": 58.25
+                    },
+                    "predicted": {
+                        "x": -1.978278477103908,
+                        "y": 1245.439766159565
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-1.json": {
+                    "experimental": {
+                        "x": -1.55,
+                        "y": 57.5
+                    },
+                    "predicted": {
+                        "x": -1.6911540357554635,
+                        "y": 1240.6771398384435
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-2.json": {
+                    "experimental": {
+                        "x": -2.95,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.8660097958614794,
+                        "y": 1249.68500809605
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-3.json": {
+                    "experimental": {
+                        "x": -2.6,
+                        "y": 57.9
+                    },
+                    "predicted": {
+                        "x": -2.84249895098241,
+                        "y": 1232.7511200400938
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-4.json": {
+                    "experimental": {
+                        "x": -3,
+                        "y": 58.3
+                    },
+                    "predicted": {
+                        "x": -3.017901724112731,
+                        "y": 1246.5825420855085
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-5.json": {
+                    "experimental": {
+                        "x": -2.7,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.705864981967851,
+                        "y": 1251.3424628774126
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-6.json": {
+                    "experimental": {
+                        "x": -2.6,
+                        "y": 58.6
+                    },
+                    "predicted": {
+                        "x": -2.0622871528220923,
+                        "y": 1243.4737137832913
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-7.json": {
+                    "experimental": {
+                        "x": -2.7,
+                        "y": 58.3
+                    },
+                    "predicted": {
+                        "x": -2.5609521260055637,
+                        "y": 1237.2875475676747
+                    }
+                }
+            }
+        },
+        "epoch-5": {
+            "best-kernel": [
+                0.0527780534488716,
+                0.08418903447794952,
+                0.6266358788717091,
+                -0.28083003186576005,
+                -0.7420000480438036,
+                1.3325941886163495,
+                -0.038857451541354296,
+                3.9488581091965997,
+                1.8682368104905225,
+                1.3439034673912045,
+                -3.142004330816235,
+                2.996983491822364,
+                -3.88330835227629
+            ],
+            "best-fitness": 3.1521459491973642,
+            "results": {},
+            "generations": 100,
+            "magnitude": 0.2,
+            "average-fitness-preop": 1.3358500103988502,
+            "average-fitness-postop": 1.6012204796605152,
+            "median-fitness-preop": 1.3119005520728624,
+            "median-fitness-postop": 1.5408350810634737,
+            "60": {
+                "other/nav-logs/cm-60-woodpanel-maxbattery.json": {
+                    "experimental": {
+                        "x": -2.5,
+                        "y": 59
+                    },
+                    "predicted": {
+                        "x": -2.521964461344017,
+                        "y": 1244.429824553465
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery.json": {
+                    "experimental": {
+                        "x": -2.8,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.8081214721771985,
+                        "y": 1243.4778576047327
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-highbattery-2.json": {
+                    "experimental": {
+                        "x": -2.5,
+                        "y": 58.25
+                    },
+                    "predicted": {
+                        "x": -1.8559763381889631,
+                        "y": 1242.635520816334
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-1.json": {
+                    "experimental": {
+                        "x": -1.55,
+                        "y": 57.5
+                    },
+                    "predicted": {
+                        "x": -1.5921296786684636,
+                        "y": 1237.8781343190228
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-2.json": {
+                    "experimental": {
+                        "x": -2.95,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.9086711962295566,
+                        "y": 1246.8860448333037
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-3.json": {
+                    "experimental": {
+                        "x": -2.6,
+                        "y": 57.9
+                    },
+                    "predicted": {
+                        "x": -2.736529421238245,
+                        "y": 1229.9588520432562
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-4.json": {
+                    "experimental": {
+                        "x": -3,
+                        "y": 58.3
+                    },
+                    "predicted": {
+                        "x": -3.006442493400618,
+                        "y": 1243.8242461531074
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-5.json": {
+                    "experimental": {
+                        "x": -2.7,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.685643494245298,
+                        "y": 1248.4664171339045
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-6.json": {
+                    "experimental": {
+                        "x": -2.6,
+                        "y": 58.6
+                    },
+                    "predicted": {
+                        "x": -1.9784385547054963,
+                        "y": 1240.6214377505498
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-7.json": {
+                    "experimental": {
+                        "x": -2.7,
+                        "y": 58.3
+                    },
+                    "predicted": {
+                        "x": -2.3935312571454546,
+                        "y": 1234.515792441373
+                    }
+                }
+            }
+        },
+        "epoch-6": {
+            "best-kernel": [
+                0.1287731810052229,
+                0.037134393899931784,
+                0.5690146303205517,
+                -0.19595681846141294,
+                -0.7516272348517249,
+                1.3215274902228038,
+                -0.07726719663210746,
+                3.9444936473051118,
+                1.8358222137949685,
+                1.41266255904388,
+                -3.1515898623734127,
+                3.025812299794622,
+                -3.891456516745624
+            ],
+            "best-fitness": 3.504606645200366,
+            "results": {},
+            "generations": 100,
+            "magnitude": 0.16666666666666666,
+            "average-fitness-preop": 1.658182978048749,
+            "average-fitness-postop": 1.9328848384353379,
+            "median-fitness-preop": 1.5973217843392296,
+            "median-fitness-postop": 1.8639352283130397,
+            "60": {
+                "other/nav-logs/cm-60-woodpanel-maxbattery.json": {
+                    "experimental": {
+                        "x": -2.5,
+                        "y": 59
+                    },
+                    "predicted": {
+                        "x": -2.464026437144061,
+                        "y": 1246.1254676208614
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery.json": {
+                    "experimental": {
+                        "x": -2.8,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.7936188996108875,
+                        "y": 1245.1733115737636
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-highbattery-2.json": {
+                    "experimental": {
+                        "x": -2.5,
+                        "y": 58.25
+                    },
+                    "predicted": {
+                        "x": -2.1035564432556946,
+                        "y": 1244.4206567619885
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-1.json": {
+                    "experimental": {
+                        "x": -1.55,
+                        "y": 57.5
+                    },
+                    "predicted": {
+                        "x": -1.7501195919727977,
+                        "y": 1239.6059952741355
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-2.json": {
+                    "experimental": {
+                        "x": -2.95,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.9593833849995326,
+                        "y": 1248.5852385904866
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-3.json": {
+                    "experimental": {
+                        "x": -2.6,
+                        "y": 57.9
+                    },
+                    "predicted": {
+                        "x": -3.0827461714319924,
+                        "y": 1231.7082419830178
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-4.json": {
+                    "experimental": {
+                        "x": -3,
+                        "y": 58.3
+                    },
+                    "predicted": {
+                        "x": -3.011276516172707,
+                        "y": 1245.5606324228238
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-5.json": {
+                    "experimental": {
+                        "x": -2.7,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.7422259581652018,
+                        "y": 1250.2763371080716
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-6.json": {
+                    "experimental": {
+                        "x": -2.6,
+                        "y": 58.6
+                    },
+                    "predicted": {
+                        "x": -2.181420891715094,
+                        "y": 1242.359588536526
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-7.json": {
+                    "experimental": {
+                        "x": -2.7,
+                        "y": 58.3
+                    },
+                    "predicted": {
+                        "x": -2.6469274987413947,
+                        "y": 1236.3165023950273
+                    }
+                }
+            }
+        },
+        "epoch-7": {
+            "best-kernel": [
+                0.14996555398570047,
+                0.04809616607637908,
+                0.538198337832747,
+                -0.21076100332381165,
+                -0.7880205542164437,
+                1.3036516989347968,
+                -0.06547525121355663,
+                3.950534254611869,
+                1.8092108033696699,
+                1.4117280462721467,
+                -3.1467193641767643,
+                3.0503839270503703,
+                -3.885446708807671
+            ],
+            "best-fitness": 3.899955021266168,
+            "results": {},
+            "generations": 100,
+            "magnitude": 0.14285714285714285,
+            "average-fitness-preop": 1.9872632833929962,
+            "average-fitness-postop": 1.987263283392994,
+            "median-fitness-preop": 1.9127029022002648,
+            "median-fitness-postop": 1.9127029022002648,
+            "60": {
+                "other/nav-logs/cm-60-woodpanel-maxbattery.json": {
+                    "experimental": {
+                        "x": -2.5,
+                        "y": 59
+                    },
+                    "predicted": {
+                        "x": -2.5195481447136165,
+                        "y": 1245.2118968739483
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery.json": {
+                    "experimental": {
+                        "x": -2.8,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.7670571911164865,
+                        "y": 1244.2912200810565
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-highbattery-2.json": {
+                    "experimental": {
+                        "x": -2.5,
+                        "y": 58.25
+                    },
+                    "predicted": {
+                        "x": -2.1642789162077314,
+                        "y": 1243.5537864236167
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-1.json": {
+                    "experimental": {
+                        "x": -1.55,
+                        "y": 57.5
+                    },
+                    "predicted": {
+                        "x": -1.6647367666726787,
+                        "y": 1238.7644446898441
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-2.json": {
+                    "experimental": {
+                        "x": -2.95,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.8945289107476695,
+                        "y": 1247.7172214561815
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-3.json": {
+                    "experimental": {
+                        "x": -2.6,
+                        "y": 57.9
+                    },
+                    "predicted": {
+                        "x": -3.054522495289593,
+                        "y": 1230.820452809161
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-4.json": {
+                    "experimental": {
+                        "x": -3,
+                        "y": 58.3
+                    },
+                    "predicted": {
+                        "x": -2.975963093755265,
+                        "y": 1244.828444568412
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-5.json": {
+                    "experimental": {
+                        "x": -2.7,
+                        "y": 58.5
+                    },
+                    "predicted": {
+                        "x": -2.7074534852718486,
+                        "y": 1249.4376511204239
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-6.json": {
+                    "experimental": {
+                        "x": -2.6,
+                        "y": 58.6
+                    },
+                    "predicted": {
+                        "x": -2.1922222537696925,
+                        "y": 1241.4503401408697
+                    }
+                },
+                "other/nav-logs/cm-60-dormroom-maxbattery-7.json": {
+                    "experimental": {
+                        "x": -2.7,
+                        "y": 58.3
+                    },
+                    "predicted": {
+                        "x": -2.7145919891773005,
+                        "y": 1235.4899722544542
+                    }
+                }
+            }
+        }
+    }
+}
