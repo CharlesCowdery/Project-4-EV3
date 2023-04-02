@@ -21,6 +21,7 @@ left_motor = devices.left_motor
 right_motor = devices.right_motor
 tank_drive = devices.tank_drive
 gyro = devices.gyro
+color_reader = devices.color_reader
 
 robot_x = 0
 robot_y = 0
@@ -41,7 +42,7 @@ def drive(dist,angle): #input travel distance in cm and margin in cm
     dist_rotation = dist/con.distance_scalar
     margin_rotation = (0)/con.distance_scalar
 
-    speed_base = 0.2
+    speed_base = -0.2
     
     left_max_speed  = speed_base*left_motor.max_speed*0.75 #handicap
     right_max_speed = speed_base*right_motor.max_speed
@@ -80,7 +81,7 @@ def drive(dist,angle): #input travel distance in cm and margin in cm
         right_rotation_array[index] = r_rotations
         index+=1
 
-        if(l_rotations >= target_rotations or r_rotations >=target_rotations):
+        if(-l_rotations >= target_rotations or -r_rotations >=target_rotations):
             left_motor.off(True)
             right_motor.off(True)
             end_time = time.perf_counter()
@@ -89,8 +90,8 @@ def drive(dist,angle): #input travel distance in cm and margin in cm
 
         if(last_angle != current_angle): #optimization to ensure motor angle is changed as rarely as possible
             delta_angle = (angle-current_angle)*10
-            left_motor.speed_sp = left_max_speed+delta_angle
-            right_motor.speed_sp = right_max_speed-delta_angle
+            left_motor.speed_sp = left_max_speed-delta_angle
+            right_motor.speed_sp = right_max_speed+delta_angle
             left_motor.command = 'run-forever'
             right_motor.command = 'run-forever'
             last_angle = current_angle
@@ -188,6 +189,10 @@ def main():
     left_motor.off(False)
     right_motor.off(False)
     drive(60,0)
+    #nav.calibrate_via_rotation()
+
+    #devices.lift_motor.on_for_rotations(100,-1)
+    
 
 
 

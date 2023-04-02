@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 from time import sleep
 from datetime import datetime
 import math
@@ -6,7 +7,7 @@ import os
 import constants_r as con
 #import numpy
 #import navperf
-
+import devices_r as devi
 #This file contains functions pertaining to sensor calibration
 #navigation estimation, and log import and exporting
 
@@ -14,13 +15,15 @@ gyro = 0
 left_motor = 0
 right_motor = 0
 tank_drive = 0
+color_reader = 0
 
 def initialize(devices):  #We get take a devices instance so the modules can share a device set
-    global gyro,left_motor,right_motor,tank_drive
+    global gyro,left_motor,right_motor,tank_drive, color_reader
     gyro = devices.gyro
     left_motor = devices.left_motor
     right_motor = devices.right_motor
     tank_drive = devices.tank_drive
+    color_reader = devices.color_reader
 
     print("Calibrating!")
     gyro.calibrate()
@@ -28,16 +31,59 @@ def initialize(devices):  #We get take a devices instance so the modules can sha
     print("Done!")
 
     gyro.mode = gyro.MODE_GYRO_ANG
+    color_reader.mode = color_reader.MODE_RGB_RAW
+
+    
+
+def test_color():
+    while(True):
+        print(str(color_reader.raw)+" "+color_reader.color_name)
+
+
+def calibrate_via_color_dist():
+    distance = 200 # cm
+
+    color_reader.mode = color_reader.MODE_COL_COLOR
+    right_speed = con.right_percent*right_motor.max_speed
+    left_speed = con.left_percent*left_motor.max_speed
+    starting_left = left_motor.rotations
+    starting_right = right_motor.rotations
+
+    left_motor.speed_sp = left_speed
+    right_motor.speed_sp = right_speed
+    left_motor.command = 'run-forever'
+    right_motor.command = 'run-forever'
+
+    color = 0
+
+    while(color == 1): #black
+        color = color_reader.value(0)
+    left_motor.off(True)
+    right_motor.off(True)
+    if color == 5: #red
+        print("calibration failed, veered left")
+        return "v-l"
+    elif color == 2: #blue
+        print("calibration failed, veered right")
+        return "v-r"
+    elif color == 3: #green
+        left_delta = left_motor.rotations-starting_left
+        right_delta= right_motor.rotations-starting_right
+        avg_delta = (left_delta+right_delta)/2
+        print("calibration successful!")
+        print(" -> left scalar:  {}".format(distance/left_delta))
+        print(" -> right scalar: {}".format(distance/right_delta))
+        print(" -> avg scalar:   {}".format(distance/avg_delta))
+        return True
 
 
 
-
-def calibrate():
+def calibrate_via_rotation():
     starting_angle = gyro.angle
     starting_left = left_motor.position/360
     starting_right = right_motor.position/360
-    left_motor.on(10)
-    right_motor.on(-10)
+    left_motor.on(-30)
+    right_motor.on(30)
     while(gyro.angle<starting_angle+720-2):
         1+1
     left_motor.off(True)
@@ -332,6 +378,7 @@ if __name__ == "__main__":
     #[0.004050715192758465, 0.00293527352267748, 0.9821536092306906] gen purp
     #[-0.16531845167217551, -0.42151239124565604, 0.04036665388278525, 0.08433965613119657, 0.053226907017891914, -0.008490659935598253, 0.2421899618716739] y
     #[0.06239878019825997, -0.6276032546357554, 1.0553617880647408, 5.2510292791663185, -0.5654825282673032, 1.677137892137101, -3.2311978278927684] x
-    file_data = load_nav_data("other/nav-logs/cm-60-woodpanel-maxbattery.json")
-    print(predict_change(file_data[3],file_data[1],file_data[2],False))
+    #file_data = load_nav_data("other/nav-logs/cm-60-woodpanel-maxbattery.json")
+    #print(predict_change(file_data[3],file_data[1],file_data[2],False))
     #print(reconstruct_from_file("other/nav-logs/cm-60-woodpanel-maxbattery.json",con.kernel_y))
+    initialize(devi)

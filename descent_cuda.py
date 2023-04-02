@@ -135,6 +135,30 @@ def generate_report(best_kernels,best_fitnesses,epochs,initial_magnitude,generat
     file.write(json.dumps(log,indent=4))
     file.close()
 
+def flatten_children(children,max_size):
+    new_children = []
+    for child_set in children:
+        for child in child_set:
+            arr = []
+            child_size = len(child)
+            padding_size = math.floor((max_size-child_size)/2)
+            arr.append(child_size)
+            arr+=[0]*padding_size
+            arr+=child
+            arr+=[0]*padding_size
+            new_children+=(arr)
+    return new_children
+
+def deflatten_children(flat_fitness,child_group_size,group_count):
+    position = 0
+    arr = []
+    for group_index in range(group_count):
+        group_arr = []
+        for i in range(child_group_size):
+            group_arr.append(flat_fitness[position])
+            position+=1
+        arr.append(group_arr)
+    return arr
 
 
 def descend(index_file_name,max_reach,min_reach,
@@ -151,7 +175,8 @@ def descend(index_file_name,max_reach,min_reach,
             ):
     global index
 
-    kernel_count = (max_reach-min_reach+1)*sibling_multiplier*threads
+    kernel_count = (max_reach-min_reach+1)*sibling_multiplier*threads*offspring_count
+    max_size = max_reach*2+1
 
     print("Spawning kernels: ")
     if(len(initial_kernels)<kernel_count):
@@ -167,16 +192,11 @@ def descend(index_file_name,max_reach,min_reach,
 
     magnitude = initial_magnitude
     
-
     
-    print("initializing pool")
-    pool = Pool(processes=threads,initializer=des_utils.initialize,initargs=(index,))
-    print("Pool initialized")
+    #pool = Pool(processes=threads,initializer=des_utils.initialize,initargs=(index,))
 
 
     console_width = (os.get_terminal_size())[0]
-    print(console_width)
-
     cols = console_width
 
     best_kernels=[]
@@ -199,10 +219,12 @@ def descend(index_file_name,max_reach,min_reach,
     best_delta_x = 0
     worst_delta_x = 0
 
-    #cuda_tools.initialize(index,max_reach*2+1,kernel_count)
+    thread_multiplier = sibling_multiplier*(max_reach-min_reach+1)*offspring_count
+    cuda_tools.initialize(index,max_size,kernel_count)
 
     for epoch in range(epochs):
         print("epoch {} (magnitude:{}):".format(epoch+1,magnitude))
+        print("getting initial fitnesses (This may take a while)",end="\r")
         prev_fitness = des_utils.get_fitness_set(kernels)[0]
         max_fitness = 0
         avg_fitness = 0
@@ -262,19 +284,25 @@ def descend(index_file_name,max_reach,min_reach,
 
             
             children = des_utils.spawn_children_set(kernels,offspring_count,magnitude)
+
+            #print(len(children)*len(children[0]),kernel_count)
             #print(children)
             eval_time = -time.perf_counter()
-            #flattened_children = numpy.asarray(children).flatten()
-            fitness_results = get_fitness_threaded(index,children,threads,pool)
+            #for child in children:
+            #    child.insert(0,len(child))
+            flattened_children = numpy.asarray(flatten_children(children,max_size),dtype=numpy.float32).flatten()
+            fitness_results = cuda_tools.test_kernels(flattened_children,threads,256,thread_multiplier)
             eval_time += time.perf_counter()
 
-            child_fitness = fitness_results[0]
-            time_spend_reconstructing = fitness_results[1]
-            time_spend_kerneling = fitness_results[2]
-            array_time = fitness_results[3]
-            worker_deploy_time = fitness_results[4]
-            worker_time = fitness_results[5]
-            fitness_time = fitness_results[6]
+            #print("eval done")
+            child_fitness = deflatten_children(fitness_results,offspring_count,len(kernels))
+            #print("sorting done")
+            #time_spend_reconstructing = fitness_results[1]
+            #time_spend_kerneling = fitness_results[2]
+            #array_time = fitness_results[3]
+            #worker_deploy_time = fitness_results[4]
+            #worker_time = fitness_results[5]
+            #fitness_time = fitness_results[6]
             #child_fitness = get_fitness_set(index,children,True)[0]
 
             selection_results = des_utils.select_fitess_member_set(kernels,prev_fitness,children,child_fitness)
@@ -340,8 +368,8 @@ def descend(index_file_name,max_reach,min_reach,
 
         print()
 
-    print("evolution done. Closing worker pool.")
-    pool.close()
+    print("evolution done.")
+    #pool.close()
 
     print("Exporting report to descent-latest.log")
     generate_report(
@@ -379,12 +407,12 @@ def continous_descent(stop_hour):
         now = datetime.datetime.now()
         kernels = descend("other/indexes/descent-data.json",
             max_reach=7,
-            min_reach=2,
+            min_reach=4,
             generations=[100,100,100,100,100,100,100,100,100],
             epochs=9,
             offspring_count=4,
             initial_magnitude=1,
-            sibling_multiplier=10,
+            sibling_multiplier=1,
             operators=[[prune,[0.07]],[prune,[0.07]],[prune,[0.07]],[prune,[0.07]],[prune,[0.07]],[prune,[0.07]],[prune,[0.07]]],
             initial_kernels = kernels,
             log_file_name="other/descent-logs/y-logs/descent-log-{}.log".format(i),
@@ -404,14 +432,14 @@ if __name__ == "__main__":
     #exit()
     descend("other/indexes/descent-data.json",
             max_reach=6,
-            min_reach=1,
+            min_reach=6,
             generations=[5,200,200,200,100,100,100,100],
             epochs=1,
             offspring_count=3,
-            sibling_multiplier=10,
+            sibling_multiplier=1,
             operators=[[prune,[0.5]],[prune,[0.15]],[prune,[0.20]],[prune,[0.30]],[prune,[0.75]],[prune,[0.75]],None],
             initial_kernels = [],
-
+            threads=2048
             )
     #data = (load_padded_data("other/indexes/descent-data.json",3))
     #angles = data["60"]["file-data"]['other/nav-logs/cm-60-woodpanel-maxbattery.json'][3]
