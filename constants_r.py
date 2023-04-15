@@ -1,6 +1,6 @@
 import math
 circumference_scalar = 0.64*1.66666666
-distance_scalar = 7.998337542623516
+distance_scalar = 7.585601404741001-0.05#7.998337542623516
 
 cross_section_length = 19.3 #cm
 
